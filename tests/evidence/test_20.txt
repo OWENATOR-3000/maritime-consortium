@@ -1,0 +1,16 @@
+Test #20: Tampered document fails verification
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/documents/DOC001/verify
+Token: regulator
+Request Body: none
+Expected Status: 200
+Actual Status: 200
+Response:
+{
+  "documentId": "DOC001",
+  "shipmentId": "SH001",
+  "expectedHash": "7518fd765183bf54593fd938bf90e61a1ffe82ee9ce5cd338c4d226f3f1c44b0",
+  "providedHash": "89f0dc963bcd60f1942295bac1f95e2e6e9d6f70ab24dfd8fdfbb5aae5633cb8",
+  "matches": false
+}

@@ -1,0 +1,64 @@
+# ---------------------------------------------------------------------------
+# Cryptographic material configuration for the Maritime Consortium prototype.
+# Used by 'cryptogen generate' to produce MSP and TLS certificates.
+# ---------------------------------------------------------------------------
+
+OrdererOrgs:
+  - Name: OrdererPortAuthority
+    Domain: port-authority.example.com
+    EnableNodeOUs: true
+    Specs:
+      - Hostname: orderer0
+
+  - Name: OrdererCustomsAuthority
+    Domain: customs-authority.example.com
+    EnableNodeOUs: true
+    Specs:
+      - Hostname: orderer0
+
+  - Name: OrdererRegulator
+    Domain: regulator.example.com
+    EnableNodeOUs: true
+    Specs:
+      - Hostname: orderer0
+
+PeerOrgs:
+  - Name: ShippingLineA
+    Domain: shipping-line-a.example.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  - Name: ShippingLineB
+    Domain: shipping-line-b.example.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  - Name: PortAuthority
+    Domain: port-authority.example.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  - Name: CustomsAuthority
+    Domain: customs-authority.example.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  - Name: Regulator
+    Domain: regulator.example.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1

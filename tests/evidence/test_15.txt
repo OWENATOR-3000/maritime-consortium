@@ -1,0 +1,12 @@
+Test #15: ShippingLineB cannot read competitor private data
+Type: NEGATIVE
+Method: GET
+URL: http://localhost:8080/shipments/SH001/commercial-details
+Token: shippingB
+Request Body: none
+Expected Status: 403
+Actual Status: 403
+Response:
+{
+  "error": "chaincode response 500, Organization ShippingLineBMSP is not authorized to access the protected commercial dataset."
+}

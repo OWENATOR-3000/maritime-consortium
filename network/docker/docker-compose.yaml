@@ -1,0 +1,332 @@
+# ---------------------------------------------------------------------------
+# Docker Compose — Maritime Consortium Fabric Network
+# 5 peers · 3 RAFT orderers · CLI tools · API gateway
+# ---------------------------------------------------------------------------
+
+volumes:
+  orderer0.port-authority.example.com:
+  orderer0.customs-authority.example.com:
+  orderer0.regulator.example.com:
+  peer0.shipping-line-a.example.com:
+  peer0.shipping-line-b.example.com:
+  peer0.port-authority.example.com:
+  peer0.customs-authority.example.com:
+  peer0.regulator.example.com:
+
+networks:
+  consortium:
+    name: maritime_consortium
+    driver: bridge
+
+services:
+
+  # ── Orderers ──────────────────────────────────────────────────────────
+
+  orderer0.port-authority.example.com:
+    image: hyperledger/fabric-orderer:2.5
+    container_name: orderer0.port-authority.example.com
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_LOCALMSPID=OrdererPortAuthorityMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+      - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+    volumes:
+      - ../organizations/ordererOrganizations/port-authority.example.com/orderers/orderer0.port-authority.example.com/msp:/var/hyperledger/orderer/msp
+      - ../organizations/ordererOrganizations/port-authority.example.com/orderers/orderer0.port-authority.example.com/tls:/var/hyperledger/orderer/tls
+      - orderer0.port-authority.example.com:/var/hyperledger/production/orderer
+    ports:
+      - "7050:7050"
+      - "7053:7053"
+    networks:
+      - consortium
+
+  orderer0.customs-authority.example.com:
+    image: hyperledger/fabric-orderer:2.5
+    container_name: orderer0.customs-authority.example.com
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_LOCALMSPID=OrdererCustomsAuthorityMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+      - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+    volumes:
+      - ../organizations/ordererOrganizations/customs-authority.example.com/orderers/orderer0.customs-authority.example.com/msp:/var/hyperledger/orderer/msp
+      - ../organizations/ordererOrganizations/customs-authority.example.com/orderers/orderer0.customs-authority.example.com/tls:/var/hyperledger/orderer/tls
+      - orderer0.customs-authority.example.com:/var/hyperledger/production/orderer
+    ports:
+      - "8050:7050"
+      - "8053:7053"
+    networks:
+      - consortium
+
+  orderer0.regulator.example.com:
+    image: hyperledger/fabric-orderer:2.5
+    container_name: orderer0.regulator.example.com
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_LOCALMSPID=OrdererRegulatorMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+      - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+    volumes:
+      - ../organizations/ordererOrganizations/regulator.example.com/orderers/orderer0.regulator.example.com/msp:/var/hyperledger/orderer/msp
+      - ../organizations/ordererOrganizations/regulator.example.com/orderers/orderer0.regulator.example.com/tls:/var/hyperledger/orderer/tls
+      - orderer0.regulator.example.com:/var/hyperledger/production/orderer
+    ports:
+      - "9150:7050"
+      - "9153:7053"
+    networks:
+      - consortium
+
+  # ── Peers ─────────────────────────────────────────────────────────────
+
+  peer0.shipping-line-a.example.com:
+    image: hyperledger/fabric-peer:2.5
+    container_name: peer0.shipping-line-a.example.com
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=maritime_consortium
+      - CORE_PEER_ID=peer0.shipping-line-a.example.com
+      - CORE_PEER_ADDRESS=peer0.shipping-line-a.example.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.shipping-line-a.example.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.shipping-line-b.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.shipping-line-a.example.com:7051
+      - CORE_PEER_LOCALMSPID=ShippingLineAMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ../organizations/peerOrganizations/shipping-line-a.example.com/peers/peer0.shipping-line-a.example.com/msp:/etc/hyperledger/fabric/msp
+      - ../organizations/peerOrganizations/shipping-line-a.example.com/peers/peer0.shipping-line-a.example.com/tls:/etc/hyperledger/fabric/tls
+      - peer0.shipping-line-a.example.com:/var/hyperledger/production
+    ports:
+      - "7051:7051"
+    networks:
+      - consortium
+
+  peer0.shipping-line-b.example.com:
+    image: hyperledger/fabric-peer:2.5
+    container_name: peer0.shipping-line-b.example.com
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=maritime_consortium
+      - CORE_PEER_ID=peer0.shipping-line-b.example.com
+      - CORE_PEER_ADDRESS=peer0.shipping-line-b.example.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.shipping-line-b.example.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.shipping-line-a.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.shipping-line-b.example.com:7051
+      - CORE_PEER_LOCALMSPID=ShippingLineBMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ../organizations/peerOrganizations/shipping-line-b.example.com/peers/peer0.shipping-line-b.example.com/msp:/etc/hyperledger/fabric/msp
+      - ../organizations/peerOrganizations/shipping-line-b.example.com/peers/peer0.shipping-line-b.example.com/tls:/etc/hyperledger/fabric/tls
+      - peer0.shipping-line-b.example.com:/var/hyperledger/production
+    ports:
+      - "8051:7051"
+    networks:
+      - consortium
+
+  peer0.port-authority.example.com:
+    image: hyperledger/fabric-peer:2.5
+    container_name: peer0.port-authority.example.com
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=maritime_consortium
+      - CORE_PEER_ID=peer0.port-authority.example.com
+      - CORE_PEER_ADDRESS=peer0.port-authority.example.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.port-authority.example.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.customs-authority.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.port-authority.example.com:7051
+      - CORE_PEER_LOCALMSPID=PortAuthorityMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ../organizations/peerOrganizations/port-authority.example.com/peers/peer0.port-authority.example.com/msp:/etc/hyperledger/fabric/msp
+      - ../organizations/peerOrganizations/port-authority.example.com/peers/peer0.port-authority.example.com/tls:/etc/hyperledger/fabric/tls
+      - peer0.port-authority.example.com:/var/hyperledger/production
+    ports:
+      - "9151:7051"
+    networks:
+      - consortium
+
+  peer0.customs-authority.example.com:
+    image: hyperledger/fabric-peer:2.5
+    container_name: peer0.customs-authority.example.com
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=maritime_consortium
+      - CORE_PEER_ID=peer0.customs-authority.example.com
+      - CORE_PEER_ADDRESS=peer0.customs-authority.example.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.customs-authority.example.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.port-authority.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.customs-authority.example.com:7051
+      - CORE_PEER_LOCALMSPID=CustomsAuthorityMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ../organizations/peerOrganizations/customs-authority.example.com/peers/peer0.customs-authority.example.com/msp:/etc/hyperledger/fabric/msp
+      - ../organizations/peerOrganizations/customs-authority.example.com/peers/peer0.customs-authority.example.com/tls:/etc/hyperledger/fabric/tls
+      - peer0.customs-authority.example.com:/var/hyperledger/production
+    ports:
+      - "10051:7051"
+    networks:
+      - consortium
+
+  peer0.regulator.example.com:
+    image: hyperledger/fabric-peer:2.5
+    container_name: peer0.regulator.example.com
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=maritime_consortium
+      - CORE_PEER_ID=peer0.regulator.example.com
+      - CORE_PEER_ADDRESS=peer0.regulator.example.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.regulator.example.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.port-authority.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.regulator.example.com:7051
+      - CORE_PEER_LOCALMSPID=RegulatorMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ../organizations/peerOrganizations/regulator.example.com/peers/peer0.regulator.example.com/msp:/etc/hyperledger/fabric/msp
+      - ../organizations/peerOrganizations/regulator.example.com/peers/peer0.regulator.example.com/tls:/etc/hyperledger/fabric/tls
+      - peer0.regulator.example.com:/var/hyperledger/production
+    ports:
+      - "11051:7051"
+    networks:
+      - consortium
+
+  # ── CLI ───────────────────────────────────────────────────────────────
+
+  cli:
+    image: hyperledger/fabric-tools:2.5
+    container_name: cli
+    tty: true
+    stdin_open: true
+    environment:
+      - GOPATH=/opt/gopath
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=true
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    volumes:
+      - ../organizations:/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations
+      - ../channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+      - ../../chaincode:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode
+      - ../scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts
+      - ../collections:/opt/gopath/src/github.com/hyperledger/fabric/peer/collections
+    depends_on:
+      - peer0.shipping-line-a.example.com
+      - peer0.shipping-line-b.example.com
+      - peer0.port-authority.example.com
+      - peer0.customs-authority.example.com
+      - peer0.regulator.example.com
+      - orderer0.port-authority.example.com
+      - orderer0.customs-authority.example.com
+      - orderer0.regulator.example.com
+    networks:
+      - consortium
+
+  # ── API Gateway ───────────────────────────────────────────────────────
+
+  api-gateway:
+    image: node:22
+    container_name: api-gateway
+    working_dir: /app
+    command: ["sh", "-c", "npm install --omit=dev && node src/server.js"]
+    volumes:
+      - ../../api:/app
+      - ../../storage:/storage
+      - ../organizations:/crypto
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - FABRIC_CHANNEL=operations
+      - FABRIC_CHAINCODE=maritime-consortium
+      - CRYPTO_PATH=/crypto
+      - STORAGE_PATH=/storage
+    depends_on:
+      - peer0.shipping-line-a.example.com
+      - peer0.shipping-line-b.example.com
+      - peer0.port-authority.example.com
+      - peer0.customs-authority.example.com
+      - peer0.regulator.example.com
+    networks:
+      - consortium

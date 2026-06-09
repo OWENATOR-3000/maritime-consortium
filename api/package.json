@@ -1,0 +1,14 @@
+{
+  "name": "maritime-consortium-api",
+  "version": "0.1.0",
+  "description": "API gateway for the maritime consortium prototype",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.10.0",
+    "@hyperledger/fabric-gateway": "^1.7.0"
+  },
+  "license": "UNLICENSED"
+}

@@ -1,0 +1,16 @@
+Test #14: ShippingLineA reads own commercial details
+Type: POSITIVE
+Method: GET
+URL: http://localhost:8080/shipments/SH001/commercial-details
+Token: shippingA
+Request Body: none
+Expected Status: 200
+Actual Status: 200
+Response:
+{
+  "shipmentId": "SH001",
+  "ownerMsp": "ShippingLineAMSP",
+  "contractValue": "$450,000",
+  "insuranceRef": "INS-2024-881",
+  "clientName": "ACME Corp"
+}

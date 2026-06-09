@@ -1,0 +1,12 @@
+Test #5: Regulator cannot create shipment
+Type: NEGATIVE
+Method: POST
+URL: http://localhost:8080/shipments
+Token: regulator
+Request Body: {"shipmentId":"SH002","routeCode":"RT-WEST-01","cargoDescription":"Test cargo"}
+Expected Status: 403
+Actual Status: 403
+Response:
+{
+  "error": "chaincode response 500, Only a shipping line can create a shipment."
+}

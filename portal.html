@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Maritime Consortium Portal</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box}
+body{background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;min-height:100vh}
+
+/* Login */
+#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem}
+.role-card{border:2px solid #e5e7eb;border-radius:16px;padding:1.4rem 1rem;cursor:pointer;transition:all .2s;background:white;text-align:center;width:100%;height:100%}
+.role-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.role-icon{font-size:2rem;margin-bottom:.4rem}
+.role-name{font-weight:700;font-size:.95rem;margin-bottom:.4rem}
+.role-perms{list-style:none;padding:0;margin:0;text-align:left;font-size:.75rem;color:#374151}
+.role-perms li{padding:.15rem 0;display:flex;gap:.4rem;align-items:flex-start}
+.role-perms li .pi{flex-shrink:0;margin-top:.1rem}
+.perm-y{color:#059669}.perm-n{color:#d1d5db}
+
+/* Role colours */
+.rc-A{color:#c0392b;border-color:#c0392b!important}
+.rc-B{color:#2d6a9f;border-color:#2d6a9f!important}
+.rc-port{color:#d35400;border-color:#d35400!important}
+.rc-customs{color:#117a8b;border-color:#117a8b!important}
+.rc-reg{color:#6c3483;border-color:#6c3483!important}
+.btn-A{background:#c0392b;color:white;border:none}.btn-A:hover,.btn-A:focus{background:#a93226;color:white}
+.btn-B{background:#2d6a9f;color:white;border:none}.btn-B:hover,.btn-B:focus{background:#245a8a;color:white}
+.btn-port{background:#d35400;color:white;border:none}.btn-port:hover,.btn-port:focus{background:#b34700;color:white}
+.btn-customs{background:#117a8b;color:white;border:none}.btn-customs:hover,.btn-customs:focus{background:#0e6070;color:white}
+.btn-reg{background:#6c3483;color:white;border:none}.btn-reg:hover,.btn-reg:focus{background:#5a2a6e;color:white}
+
+/* App */
+#app{display:none;flex-direction:column;min-height:100vh}
+.app-header{background:#1a2744;color:white;padding:.75rem 1.5rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:100}
+.app-header .brand{font-weight:700;font-size:1.1rem}
+.identity-pill{display:flex;align-items:center;gap:.6rem;padding:.4rem .9rem;border-radius:20px;font-size:.85rem;font-weight:600;cursor:pointer;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);transition:all .2s}
+.identity-pill:hover{background:rgba(255,255,255,.2)}
+.conn-dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.conn-on{background:#28a745}.conn-off{background:#dc3545}.conn-chk{background:#ffc107}
+
+/* Tabs */
+.workflow-nav{background:white;border-bottom:2px solid #e5e7eb;padding:0 1.5rem;display:flex;overflow-x:auto}
+.wf-tab{padding:.7rem 1.1rem;border-bottom:3px solid transparent;cursor:pointer;font-size:.83rem;font-weight:600;color:#6c757d;white-space:nowrap;transition:all .2s;display:flex;align-items:center;gap:.4rem;margin-bottom:-2px}
+.wf-tab:hover{color:#1a2744;background:#f8f9fa}
+.wf-tab.active{color:#1a2744;border-bottom-color:#1a2744}
+.wf-tab.locked{opacity:.4;cursor:not-allowed;pointer-events:none}
+.tab-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;background:#e9ecef;color:#6c757d;flex-shrink:0}
+.wf-tab.active .tab-num{background:#1a2744;color:white}
+
+/* Layout */
+.app-body{display:grid;grid-template-columns:1fr 320px;gap:1.25rem;padding:1.25rem;max-width:1280px;margin:0 auto;width:100%}
+.action-panel{background:white;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.07);overflow:hidden}
+.action-header{padding:1.2rem 1.4rem .8rem;border-bottom:1px solid #f1f5f9}
+.action-title{font-size:1.05rem;font-weight:700;color:#1a2744;margin-bottom:.15rem}
+.action-subtitle{font-size:.8rem;color:#6c757d}
+.action-body{padding:1.2rem 1.4rem}
+
+/* Who badge */
+.who-badge{display:flex;align-items:flex-start;gap:.6rem;padding:.7rem .9rem;border-radius:10px;font-size:.82rem;margin-bottom:1rem;line-height:1.4}
+.who-ok{background:#d1fae5;color:#065f46}
+.who-no{background:#fee2e2;color:#991b1b}
+
+/* Forms */
+.form-label{font-weight:600;font-size:.84rem;color:#374151;margin-bottom:.25rem}
+.form-hint{font-size:.73rem;color:#9ca3af;margin-top:.2rem;line-height:1.4}
+.field-group{margin-bottom:.9rem}
+.locked-msg{background:#f9fafb;border:1.5px dashed #d1d5db;border-radius:10px;padding:1.5rem;text-align:center;color:#6c757d;font-size:.88rem;line-height:1.6}
+.locked-msg .lock-icon{font-size:1.6rem;display:block;margin-bottom:.5rem;color:#9ca3af}
+
+/* Response */
+.response-area{margin-top:.9rem;border-radius:10px;overflow:hidden;display:none}
+.response-area.show{display:block}
+.resp-status{padding:.5rem 1rem;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:.4rem}
+.resp-ok{background:#d1fae5;color:#065f46}
+.resp-err{background:#fee2e2;color:#991b1b}
+.resp-body{background:#1e1e2e;color:#cdd6f4;padding:.9rem 1rem;font-family:'Courier New',monospace;font-size:.75rem;max-height:210px;overflow-y:auto;white-space:pre-wrap}
+.j-key{color:#89dceb}.j-str{color:#a6e3a1}.j-num{color:#fab387}.j-bool{color:#cba6f7}
+
+/* State panel */
+.state-panel{display:flex;flex-direction:column;gap:1rem}
+.state-card{background:white;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.07);padding:1.1rem}
+.state-title{font-size:.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-bottom:.7rem}
+.status-chip{display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .8rem;border-radius:20px;font-size:.8rem;font-weight:700}
+.chip-created{background:#dbeeff;color:#1d4ed8}
+.chip-pending{background:#fef3e8;color:#c2410c}
+.chip-ready{background:#fef9c3;color:#854d0e}
+.chip-cleared{background:#d1fae5;color:#065f46}
+.chip-none{background:#f1f5f9;color:#9ca3af}
+.state-field{display:flex;justify-content:space-between;align-items:flex-start;padding:.35rem 0;font-size:.81rem;border-bottom:1px solid #f1f5f9}
+.state-field:last-child{border-bottom:none}
+.sf-label{color:#9ca3af;flex-shrink:0;margin-right:.5rem}
+.sf-val{font-weight:600;color:#1a2744;text-align:right;word-break:break-all;max-width:190px}
+.hash-val{font-family:monospace;font-size:.68rem;color:#6c3483}
+.approval-row{display:flex;align-items:center;gap:.6rem;padding:.45rem 0;border-bottom:1px solid #f1f5f9;font-size:.83rem}
+.approval-row:last-child{border-bottom:none}
+.appr-icon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0}
+.appr-done{background:#d1fae5;color:#065f46}
+.appr-wait{background:#f1f5f9;color:#9ca3af}
+.perm-row{display:flex;gap:.5rem;align-items:center;font-size:.81rem;padding:.2rem 0}
+.load-row{display:flex;gap:.4rem;margin-bottom:.7rem}
+.btn-sm-sq{padding:.38rem .75rem;font-size:.82rem;border-radius:8px}
+.spinner-sm{width:.95rem;height:.95rem;border-width:2px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div style="max-width:1050px;width:100%">
+    <div class="text-center mb-4">
+      <div style="font-size:2.5rem">⚓</div>
+      <h2 class="fw-bold mt-2" style="color:#1a2744">Maritime Consortium Portal</h2>
+      <p class="text-muted mb-0">Hyperledger Fabric 2.5 · Select your organisation to enter</p>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <!-- Shipping Line A -->
+      <div class="col">
+        <div class="role-card rc-A" onclick="selectRole('shippingA')">
+          <div class="role-icon">🚢</div>
+          <div class="role-name" style="color:#c0392b">Shipping Line A</div>
+          <ul class="role-perms mt-2">
+            <li><span class="pi perm-y">✓</span>Create shipments</li>
+            <li><span class="pi perm-y">✓</span>Submit confidential commercial data</li>
+            <li><span class="pi perm-y">✓</span>Read commercial data</li>
+            <li><span class="pi perm-y">✓</span>Approve clearance <em style="color:#9ca3af">(required)</em></li>
+            <li><span class="pi perm-y">✓</span>Finalise clearance</li>
+            <li><span class="pi perm-y">✓</span>Upload &amp; verify documents</li>
+            <li><span class="pi perm-y">✓</span>Read audit trail</li>
+          </ul>
+        </div>
+      </div>
+      <!-- Shipping Line B -->
+      <div class="col">
+        <div class="role-card rc-B" onclick="selectRole('shippingB')">
+          <div class="role-icon">🛳</div>
+          <div class="role-name" style="color:#2d6a9f">Shipping Line B</div>
+          <ul class="role-perms mt-2">
+            <li><span class="pi perm-y">✓</span>Create shipments</li>
+            <li><span class="pi perm-n">✗</span><span style="color:#d1d5db">Submit commercial data</span></li>
+            <li><span class="pi perm-n">✗</span><span style="color:#d1d5db">Read commercial data</span></li>
+            <li><span class="pi perm-n">✗</span><span style="color:#d1d5db">Approve clearance</span></li>
+            <li><span class="pi perm-y">✓</span>Finalise clearance</li>
+            <li><span class="pi perm-n">✗</span><span style="color:#d1d5db">Upload documents</span></li>
+            <li><span class="pi perm-y">✓</span>Verify documents &amp; audit trail</li>
+          </ul>
+        </div>
+      </div>
+      <!-- Port Authority -->
+      <div class="col">
+        <div class="role-card rc-port" onclick="selectRole('port')">
+          <div class="role-icon">🏗</div>
+          <div class="role-name" style="color:#d35400">Port Authority</div>
+          <ul class="role-perms mt-2">
+            <li><span class="pi perm-n">✗</span><span style="color:#d1d5db">Create shipments</span></li>
+            <li><span class="pi perm-n">✗</span><span style="color:#d1d5db">Submit commercial data</span></li>
+            <li><span class="pi perm-y">✓</span>Read commercial data</li>
+            <li><span class="pi perm-y">✓</span>Approve clearance <em style="color:#9ca3af">(required)</em></li>
+            <li><span class="pi perm-y">✓</span>Finalise clearance</li>
+            <li><span class="pi perm-y">✓</span>Upload &amp; verify documents</li>
+            <li><span class="pi perm-y">✓</span>Read audit trail</li>
+          </ul>
+        </div>
+      </div>
+      <!-- Customs -->
+      <div class="col">
+        <div class="role-card rc-customs" onclick="selectRole('customs')">
+          <div class="role-icon">🛃</div>
+          <div class="role-name" style="color:#117a8b">Customs Authority</div>
+          <ul class="role-perms mt-2">
+            <li><span class="pi perm-n">✗</span><span style="color:#d1d5db">Create shipments</span></li>
+            <li><span class="pi perm-n">✗</span><span style="color:#d1d5db">Submit commercial data</span></li>
+            <li><span class="pi perm-y">✓</span>Read commercial data</li>
+            <li><span class="pi perm-y">✓</span>Approve clearance <em style="color:#9ca3af">(required)</em></li>
+            <li><span class="pi perm-y">✓</span>Finalise clearance</li>
+            <li><span class="pi perm-y">✓</span>Upload &amp; verify documents</li>
+            <li><span class="pi perm-y">✓</span>Read audit trail</li>
+          </ul>
+        </div>
+      </div>
+      <!-- Regulator -->
+      <div class="col">
+        <div class="role-card rc-reg" onclick="selectRole('regulator')">
+          <div class="role-icon">⚖</div>
+          <div class="role-name" style="color:#6c3483">Regulator</div>
+          <ul class="role-perms mt-2">
+            <li><span class="pi perm-n">✗</span><span style="color:#d1d5db">Create shipments</span></li>
+            <li><span class="pi perm-n">✗</span><span style="color:#d1d5db">Submit commercial data</span></li>
+            <li><span class="pi perm-y">✓</span>Read commercial data <em style="color:#9ca3af">(oversight)</em></li>
+            <li><span class="pi perm-n">✗</span><span style="color:#d1d5db">Approve clearance</span></li>
+            <li><span class="pi perm-y">✓</span>Finalise clearance</li>
+            <li><span class="pi perm-y">✓</span>Upload &amp; verify documents</li>
+            <li><span class="pi perm-y">✓</span>Read audit trail</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <p class="text-center text-muted small">API: <code>http://localhost:8080</code></p>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="app-header">
+    <span class="brand">⚓ Maritime Consortium Portal</span>
+    <div id="identity-pill" class="identity-pill ms-2" onclick="logout()">
+      <i class="bi bi-person-fill"></i>
+      <span id="identity-label">–</span>
+      <span class="text-white-50 small">· switch</span>
+    </div>
+    <div class="ms-auto d-flex align-items-center gap-2">
+      <span class="conn-dot conn-chk" id="conn-dot"></span>
+      <span class="small text-white-50" id="conn-label">Checking…</span>
+    </div>
+  </div>
+
+  <div class="workflow-nav">
+    <div class="wf-tab active" id="tab-1" onclick="goTab(1)"><span class="tab-num">1</span>Create Shipment</div>
+    <div class="wf-tab"        id="tab-2" onclick="goTab(2)"><span class="tab-num">2</span>Commercial Details</div>
+    <div class="wf-tab"        id="tab-3" onclick="goTab(3)"><span class="tab-num">3</span>Clearance Approval</div>
+    <div class="wf-tab"        id="tab-4" onclick="goTab(4)"><span class="tab-num">4</span>Finalise Clearance</div>
+    <div class="wf-tab"        id="tab-5" onclick="goTab(5)"><span class="tab-num">5</span>Documents</div>
+    <div class="wf-tab"        id="tab-6" onclick="goTab(6)"><span class="tab-num">6</span>Audit Trail</div>
+  </div>
+
+  <div class="app-body">
+    <!-- Action panel -->
+    <div class="action-panel">
+
+      <!-- TAB 1 -->
+      <div id="pane-1">
+        <div class="action-header">
+          <div class="action-title">Create a New Shipment</div>
+          <div class="action-subtitle">Registers a new cargo shipment on the blockchain ledger. Only shipping lines may do this.</div>
+        </div>
+        <div class="action-body">
+          <div id="who-1"></div>
+          <div id="form-1"></div>
+          <div id="resp-1" class="response-area"></div>
+        </div>
+      </div>
+
+      <!-- TAB 2 -->
+      <div id="pane-2" style="display:none">
+        <div class="action-header">
+          <div class="action-title">Commercial Details</div>
+          <div class="action-subtitle">Confidential data stored in a private blockchain collection. Only Shipping Line A may submit. Shipping Line B has no access at all.</div>
+        </div>
+        <div class="action-body">
+          <div id="who-2"></div>
+          <div id="form-2"></div>
+          <div id="resp-2" class="response-area"></div>
+        </div>
+      </div>
+
+      <!-- TAB 3 -->
+      <div id="pane-3" style="display:none">
+        <div class="action-header">
+          <div class="action-title">Approve Clearance</div>
+          <div class="action-subtitle">Three specific parties must each approve before the shipment can be cleared. Switch identities to approve as each one.</div>
+        </div>
+        <div class="action-body">
+          <div id="who-3"></div>
+          <!-- Required approvals visual -->
+          <div class="mb-3 p-3 rounded" style="background:#f8fafc;border:1px solid #e5e7eb">
+            <div class="state-title mb-2">Required Signatories</div>
+            <div class="approval-row">
+              <div class="appr-icon appr-wait" id="appr-A"><i class="bi bi-clock"></i></div>
+              <div><div class="fw-semibold" style="font-size:.84rem">Shipping Line A</div><div style="font-size:.73rem;color:#9ca3af">ShippingLineAMSP</div></div>
+            </div>
+            <div class="approval-row">
+              <div class="appr-icon appr-wait" id="appr-C"><i class="bi bi-clock"></i></div>
+              <div><div class="fw-semibold" style="font-size:.84rem">Customs Authority</div><div style="font-size:.73rem;color:#9ca3af">CustomsAuthorityMSP</div></div>
+            </div>
+            <div class="approval-row">
+              <div class="appr-icon appr-wait" id="appr-P"><i class="bi bi-clock"></i></div>
+              <div><div class="fw-semibold" style="font-size:.84rem">Port Authority</div><div style="font-size:.73rem;color:#9ca3af">PortAuthorityMSP</div></div>
+            </div>
+          </div>
+          <div id="form-3"></div>
+          <div id="resp-3" class="response-area"></div>
+        </div>
+      </div>
+
+      <!-- TAB 4 -->
+      <div id="pane-4" style="display:none">
+        <div class="action-header">
+          <div class="action-title">Finalise Clearance</div>
+          <div class="action-subtitle">Any authenticated organisation may call this. The blockchain will reject it if all three required approvals are not yet on-chain.</div>
+        </div>
+        <div class="action-body">
+          <div class="field-group">
+            <label class="form-label">Shipment ID</label>
+            <input id="f-fsid" class="form-control" placeholder="e.g. SH100"/>
+          </div>
+          <button id="btn-final" class="btn btn-success btn-sm-sq w-100" onclick="doFinalize()">
+            <i class="bi bi-flag-fill me-1"></i>Finalise Clearance
+          </button>
+          <div id="resp-4" class="response-area"></div>
+        </div>
+      </div>
+
+      <!-- TAB 5 -->
+      <div id="pane-5" style="display:none">
+        <div class="action-header">
+          <div class="action-title">Document Anchoring</div>
+          <div class="action-subtitle">Store a compliance document off-chain and anchor its SHA-256 hash on the immutable ledger. Shipping Line B cannot upload.</div>
+        </div>
+        <div class="action-body">
+          <ul class="nav nav-pills mb-3">
+            <li class="nav-item"><a class="nav-link active py-1" href="#" onclick="showDocTab('upload');return false">Upload Document</a></li>
+            <li class="nav-item"><a class="nav-link py-1" href="#" onclick="showDocTab('verify');return false">Verify Integrity</a></li>
+          </ul>
+          <div id="doc-upload">
+            <div id="who-5"></div>
+            <div id="form-doc-upload"></div>
+          </div>
+          <div id="doc-verify" style="display:none">
+            <div class="field-group">
+              <label class="form-label">Document ID</label>
+              <input id="f-verify-did" class="form-control" placeholder="e.g. DOC100"/>
+            </div>
+            <button class="btn btn-success btn-sm-sq w-100 mb-3" onclick="doVerify()">
+              <i class="bi bi-shield-check me-1"></i>Verify Integrity
+            </button>
+            <div class="alert alert-warning p-2" style="font-size:.8rem">
+              <strong>Tamper test:</strong> Run this command in a terminal, then click Verify to see <code>matches: false</code>:<br/>
+              <code id="tamper-cmd" class="d-block mt-1 bg-dark text-white rounded p-1">docker exec api-gateway sh -c 'echo "TAMPERED" > /storage/documents/DOC100'</code>
+            </div>
+          </div>
+          <div id="resp-5" class="response-area mt-2"></div>
+        </div>
+      </div>
+
+      <!-- TAB 6 -->
+      <div id="pane-6" style="display:none">
+        <div class="action-header">
+          <div class="action-title">Audit Trail</div>
+          <div class="action-subtitle">Every action recorded on-chain with timestamp and actor. Immutable — cannot be altered or deleted.</div>
+        </div>
+        <div class="action-body">
+          <div class="field-group">
+            <label class="form-label">Shipment ID</label>
+            <input id="f-audit-sid" class="form-control" placeholder="e.g. SH100"/>
+          </div>
+          <button id="btn-audit" class="btn btn-sm-sq w-100" style="background:#1a2744;color:white" onclick="doAudit()">
+            <i class="bi bi-journal-text me-1"></i>Load Full Audit Trail
+          </button>
+          <div id="resp-6" class="response-area"></div>
+        </div>
+      </div>
+
+    </div><!-- /action-panel -->
+
+    <!-- State panel -->
+    <div class="state-panel">
+
+      <div class="state-card">
+        <div class="state-title">Live Shipment State</div>
+        <div class="load-row">
+          <input id="track-sid" class="form-control form-control-sm" placeholder="Shipment ID" value="SH100"/>
+          <button class="btn btn-sm btn-outline-secondary px-2" onclick="loadShipment()" title="Refresh"><i class="bi bi-arrow-clockwise"></i></button>
+        </div>
+        <div id="shipment-state">
+          <div class="text-muted small text-center py-2">Enter ID and click ↻ to load</div>
+        </div>
+      </div>
+
+      <div class="state-card">
+        <div class="state-title">Your Permissions</div>
+        <div id="role-summary"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:8080';
+let role = null;
+
+// ── Role definitions — exact permissions from chaincode ──────────────
+const ROLES = {
+  shippingA: {
+    label:'Shipping Line A', msp:'ShippingLineAMSP', cls:'A', icon:'🚢', color:'#c0392b',
+    can:['create','commercial-write','commercial-read','approve','finalize','upload-doc','verify-doc','read','audit']
+  },
+  shippingB: {
+    label:'Shipping Line B', msp:'ShippingLineBMSP', cls:'B', icon:'🛳', color:'#2d6a9f',
+    can:['create','finalize','verify-doc','read','audit']
+    // cannot: commercial-write, commercial-read, approve, upload-doc
+  },
+  port: {
+    label:'Port Authority', msp:'PortAuthorityMSP', cls:'port', icon:'🏗', color:'#d35400',
+    can:['commercial-read','approve','finalize','upload-doc','verify-doc','read','audit']
+  },
+  customs: {
+    label:'Customs Authority', msp:'CustomsAuthorityMSP', cls:'customs', icon:'🛃', color:'#117a8b',
+    can:['commercial-read','approve','finalize','upload-doc','verify-doc','read','audit']
+  },
+  regulator: {
+    label:'Regulator', msp:'RegulatorMSP', cls:'reg', icon:'⚖', color:'#6c3483',
+    can:['commercial-read','finalize','upload-doc','verify-doc','read','audit']
+    // cannot: create, commercial-write, approve
+  },
+};
+
+const PERM_LABELS = [
+  ['create',           'Create shipments'],
+  ['commercial-write', 'Submit commercial data'],
+  ['commercial-read',  'Read commercial data'],
+  ['approve',          'Approve clearance'],
+  ['finalize',         'Finalise clearance'],
+  ['upload-doc',       'Upload documents'],
+  ['verify-doc',       'Verify documents'],
+  ['read',             'Read public shipment data'],
+  ['audit',            'Read audit trail'],
+];
+
+// ── Auth ──────────────────────────────────────────────────────────────
+function selectRole(r) {
+  role = r;
+  const R = ROLES[r];
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('identity-label').textContent = R.icon + ' ' + R.label;
+  document.getElementById('identity-pill').style.borderColor = R.color;
+  checkAPI();
+  renderRoleSummary();
+  goTab(1);
+}
+
+function logout() {
+  role = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+// ── API helpers ────────────────────────────────────────────────────────
+async function checkAPI() {
+  const dot = document.getElementById('conn-dot');
+  const lbl = document.getElementById('conn-label');
+  try {
+    const r = await fetch(API + '/health');
+    dot.className = r.ok ? 'conn-dot conn-on' : 'conn-dot conn-off';
+    lbl.textContent  = r.ok ? 'API online' : 'API error';
+  } catch {
+    dot.className = 'conn-dot conn-off';
+    lbl.textContent = 'API unreachable';
+  }
+}
+
+async function api(method, path, body, forceToken) {
+  const token = forceToken || role;
+  const opts = { method, headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+token } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  let data; try { data = await r.json(); } catch { data = { raw: await r.text() }; }
+  return { status: r.status, data };
+}
+
+function hl(json) {
+  return JSON.stringify(json, null, 2).replace(
+    /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
+    m => {
+      if (/^"/.test(m)) return /:$/.test(m) ? `<span class="j-key">${m}</span>` : `<span class="j-str">${m}</span>`;
+      if (/true|false/.test(m)) return `<span class="j-bool">${m}</span>`;
+      return `<span class="j-num">${m}</span>`;
+    }
+  );
+}
+
+function showResp(id, status, data) {
+  const box = document.getElementById('resp-' + id);
+  const ok = status >= 200 && status < 300;
+  box.className = 'response-area show';
+  box.innerHTML = `<div class="resp-status ${ok ? 'resp-ok' : 'resp-err'}">
+    <i class="bi bi-${ok ? 'check-circle' : 'x-circle'}"></i> HTTP ${status} — ${ok ? 'Success' : 'Error'}
+  </div><div class="resp-body">${hl(data)}</div>`;
+}
+
+function setLoading(id, label) {
+  const b = document.getElementById(id);
+  if (!b) return;
+  b.disabled = !!label;
+  if (label) b.innerHTML = `<span class="spinner-border spinner-sm me-1"></span>${label}`;
+}
+
+function can(perm) { return ROLES[role].can.includes(perm); }
+
+// ── Tabs ───────────────────────────────────────────────────────────────
+let currentTab = 1;
+function goTab(n) {
+  currentTab = n;
+  for (let i = 1; i <= 6; i++) {
+    document.getElementById('pane-' + i).style.display = i === n ? '' : 'none';
+    document.getElementById('tab-' + i).classList.toggle('active', i === n);
+  }
+  renderTab(n);
+}
+
+function sid() { return document.getElementById('track-sid').value.trim() || 'SH100'; }
+
+function renderTab(n) {
+  const R = ROLES[role];
+
+  if (n === 1) {
+    document.getElementById('who-1').innerHTML = can('create')
+      ? who(true, `You are <strong>${R.label}</strong> — you may register new shipments on the ledger`)
+      : who(false, `Only <strong>Shipping Line A</strong> or <strong>Shipping Line B</strong> can create shipments.<br>You are <strong>${R.label}</strong>.`);
+
+    document.getElementById('form-1').innerHTML = can('create') ? `
+      <div class="field-group">
+        <label class="form-label">Shipment ID</label>
+        <input id="f-sid" class="form-control" value="${sid()}" placeholder="e.g. SH100"/>
+        <div class="form-hint">Must be unique — if it already exists on the ledger you will get an error</div>
+      </div>
+      <div class="field-group">
+        <label class="form-label">Route Code</label>
+        <input id="f-route" class="form-control" placeholder="e.g. RT-EAST-01"/>
+      </div>
+      <div class="field-group">
+        <label class="form-label">Cargo Description</label>
+        <input id="f-cargo" class="form-control" placeholder="e.g. Container of electronics"/>
+      </div>
+      <button id="btn-create" class="btn btn-${R.cls} btn-sm-sq w-100" onclick="doCreate()">
+        <i class="bi bi-plus-circle me-1"></i>Create Shipment
+      </button>` : locked(`Only shipping lines can initiate cargo shipments.<br>Switch to <strong>Shipping Line A</strong> or <strong>B</strong> to create one.`);
+  }
+
+  if (n === 2) {
+    const canWrite = can('commercial-write');
+    const canRead  = can('commercial-read');
+    document.getElementById('who-2').innerHTML = canWrite
+      ? who(true, `You are <strong>${R.label}</strong> — only you can submit private commercial data`)
+      : canRead
+        ? who(true, `You are <strong>${R.label}</strong> — you are a collection member and may read commercial data`)
+        : who(false, `<strong>${R.label}</strong> has no access to the private commercial data collection`);
+
+    document.getElementById('form-2').innerHTML = canWrite ? `
+      <div class="field-group">
+        <label class="form-label">Shipment ID</label>
+        <input id="f-csid" class="form-control" value="${sid()}"/>
+      </div>
+      <div class="field-group">
+        <label class="form-label">Contract Value</label>
+        <input id="f-cv" class="form-control" placeholder="e.g. $450,000"/>
+        <div class="form-hint">Stored only in the private collection — competitors cannot see this</div>
+      </div>
+      <div class="field-group">
+        <label class="form-label">Insurance Reference</label>
+        <input id="f-ins" class="form-control" placeholder="e.g. INS-2024-881"/>
+      </div>
+      <div class="field-group">
+        <label class="form-label">Client Name</label>
+        <input id="f-client" class="form-control" placeholder="e.g. ACME Corp"/>
+      </div>
+      <button id="btn-comm" class="btn btn-${R.cls} btn-sm-sq w-100 mb-2" onclick="doCommercial()">
+        <i class="bi bi-lock me-1"></i>Submit Private Data
+      </button>
+      <button class="btn btn-outline-secondary btn-sm-sq w-100" onclick="doReadCommercial()">
+        <i class="bi bi-eye me-1"></i>Read Back My Data
+      </button>` :
+    canRead ? `
+      <div class="field-group">
+        <label class="form-label">Shipment ID</label>
+        <input id="f-csid" class="form-control" value="${sid()}"/>
+      </div>
+      <p class="text-muted" style="font-size:.82rem">As <strong>${R.label}</strong> you have read access to the private collection for oversight purposes.</p>
+      <button class="btn btn-outline-secondary btn-sm-sq w-100" onclick="doReadCommercial()">
+        <i class="bi bi-eye me-1"></i>Read Commercial Data
+      </button>` :
+    locked(`<strong>Shipping Line B</strong> has no access to the commercial data collection at all.<br>This enforces competitor confidentiality — Shipping Line B cannot see Shipping Line A's commercial terms.`);
+  }
+
+  if (n === 3) {
+    document.getElementById('who-3').innerHTML = can('approve')
+      ? who(true, `You are <strong>${R.label}</strong> — your approval is one of the three required on-chain signatures`)
+      : who(false, `<strong>${R.label}</strong> is not a required signatory.<br>Only <strong>Shipping Line A</strong>, <strong>Customs Authority</strong>, and <strong>Port Authority</strong> can approve.`);
+
+    document.getElementById('form-3').innerHTML = can('approve') ? `
+      <div class="field-group">
+        <label class="form-label">Shipment ID</label>
+        <input id="f-asid" class="form-control" value="${sid()}"/>
+      </div>
+      <button id="btn-approve" class="btn btn-${R.cls} btn-sm-sq w-100" onclick="doApprove()">
+        <i class="bi bi-check2-circle me-1"></i>Approve as ${R.label}
+      </button>` :
+      locked(`Switch to <strong>Shipping Line A</strong>, <strong>Customs Authority</strong>, or <strong>Port Authority</strong> to record an approval.`);
+
+    loadApprovals(sid());
+  }
+
+  if (n === 4) {
+    document.getElementById('f-fsid').value = sid();
+  }
+
+  if (n === 5) {
+    const canUpload = can('upload-doc');
+    document.getElementById('who-5').innerHTML = canUpload
+      ? who(true, `You are <strong>${R.label}</strong> — you may anchor compliance documents on-chain`)
+      : who(false, `<strong>Shipping Line B</strong> cannot upload documents. Switch to another organisation.`);
+    document.getElementById('form-doc-upload').innerHTML = canUpload ? `
+      <div class="field-group">
+        <label class="form-label">Document ID</label>
+        <input id="f-did" class="form-control" placeholder="e.g. DOC100"/>
+        <div class="form-hint">Unique identifier for this document</div>
+      </div>
+      <div class="field-group">
+        <label class="form-label">Document Name</label>
+        <input id="f-dname" class="form-control" placeholder="e.g. customs-certificate.pdf"/>
+      </div>
+      <div class="field-group">
+        <label class="form-label">Document Content</label>
+        <textarea id="f-dcontent" class="form-control" rows="4" placeholder="Type or paste the document content here…"></textarea>
+        <div class="form-hint">Stored off-chain · SHA-256 hash anchored on blockchain</div>
+      </div>
+      <button class="btn btn-${R.cls} btn-sm-sq w-100" onclick="doUpload()">
+        <i class="bi bi-cloud-upload me-1"></i>Upload &amp; Anchor Hash
+      </button>` : locked(`Shipping Line B cannot upload compliance documents.`);
+  }
+
+  if (n === 6) {
+    document.getElementById('f-audit-sid').value = sid();
+  }
+}
+
+// ── Actions ────────────────────────────────────────────────────────────
+async function doCreate() {
+  const s = v('f-sid'), r = v('f-route'), c = v('f-cargo');
+  if (!s || !r || !c) { alert('Please fill in all fields.'); return; }
+  document.getElementById('track-sid').value = s;
+  setLoading('btn-create', 'Creating…');
+  const { status, data } = await api('POST', '/shipments', { shipmentId:s, routeCode:r, cargoDescription:c });
+  showResp(1, status, data);
+  resetBtn('btn-create', `<i class="bi bi-plus-circle me-1"></i>Create Shipment`);
+  if (status === 202) { syncSidFields(s); loadShipment(); }
+}
+
+async function doCommercial() {
+  const s = v('f-csid'), cv = v('f-cv'), ins = v('f-ins'), cl = v('f-client');
+  if (!s || !cv || !ins || !cl) { alert('Please fill in all fields.'); return; }
+  setLoading('btn-comm', 'Submitting…');
+  const { status, data } = await api('POST', `/shipments/${s}/commercial-details`,
+    { commercialDetails: { contractValue:cv, insuranceRef:ins, clientName:cl } });
+  showResp(2, status, data);
+  resetBtn('btn-comm', `<i class="bi bi-lock me-1"></i>Submit Private Data`);
+  if (status === 202) loadShipment();
+}
+
+async function doReadCommercial() {
+  const s = v('f-csid') || sid();
+  const { status, data } = await api('GET', `/shipments/${s}/commercial-details`);
+  showResp(2, status, data);
+}
+
+async function doApprove() {
+  const s = v('f-asid');
+  if (!s) { alert('Enter a Shipment ID.'); return; }
+  setLoading('btn-approve', 'Approving…');
+  const { status, data } = await api('POST', `/shipments/${s}/clearance/approve`);
+  showResp(3, status, data);
+  resetBtn('btn-approve', `<i class="bi bi-check2-circle me-1"></i>Approve as ${ROLES[role].label}`);
+  if (status === 202) { loadShipment(); loadApprovals(s); }
+}
+
+async function loadApprovals(s) {
+  try {
+    const { status, data } = await api('GET', `/shipments/${s}`);
+    if (status !== 200) return;
+    // chaincode field is clearanceApprovals
+    const approvals = data.clearanceApprovals || [];
+    const map = { 'appr-A':'ShippingLineAMSP', 'appr-C':'CustomsAuthorityMSP', 'appr-P':'PortAuthorityMSP' };
+    Object.entries(map).forEach(([elId, msp]) => {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      if (approvals.includes(msp)) {
+        el.className = 'appr-icon appr-done';
+        el.innerHTML = '<i class="bi bi-check2"></i>';
+      } else {
+        el.className = 'appr-icon appr-wait';
+        el.innerHTML = '<i class="bi bi-clock"></i>';
+      }
+    });
+  } catch {}
+}
+
+async function doFinalize() {
+  const s = v('f-fsid');
+  if (!s) { alert('Enter a Shipment ID.'); return; }
+  setLoading('btn-final', 'Finalising…');
+  const { status, data } = await api('POST', `/shipments/${s}/clearance/finalize`);
+  showResp(4, status, data);
+  resetBtn('btn-final', `<i class="bi bi-flag-fill me-1"></i>Finalise Clearance`);
+  if (status === 202) loadShipment();
+}
+
+function showDocTab(t) {
+  document.getElementById('doc-upload').style.display = t === 'upload' ? '' : 'none';
+  document.getElementById('doc-verify').style.display = t === 'verify' ? '' : 'none';
+  document.querySelectorAll('.nav-pills .nav-link').forEach((a, i) => {
+    a.classList.toggle('active', (i === 0 && t === 'upload') || (i === 1 && t === 'verify'));
+  });
+}
+
+async function doUpload() {
+  const did = v('f-did'), dname = v('f-dname'), content = v('f-dcontent');
+  if (!did || !dname || !content) { alert('Please fill in all fields.'); return; }
+  document.getElementById('tamper-cmd').textContent =
+    `docker exec api-gateway sh -c 'echo "TAMPERED" > /storage/documents/${did}'`;
+  document.getElementById('f-verify-did').value = did;
+  const b64 = btoa(unescape(encodeURIComponent(content)));
+  const { status, data } = await api('POST', '/documents/upload',
+    { shipmentId: sid(), documentId: did, documentName: dname, content: b64 });
+  showResp(5, status, data);
+}
+
+async function doVerify() {
+  const did = v('f-verify-did');
+  if (!did) { alert('Enter a Document ID.'); return; }
+  const { status, data } = await api('POST', `/documents/${did}/verify`);
+  showResp(5, status, data);
+}
+
+async function doAudit() {
+  const s = v('f-audit-sid') || sid();
+  setLoading('btn-audit', 'Loading…');
+  const { status, data } = await api('GET', `/shipments/${s}/audit`);
+  showResp(6, status, data);
+  resetBtn('btn-audit', `<i class="bi bi-journal-text me-1"></i>Load Full Audit Trail`);
+}
+
+// ── Live state ─────────────────────────────────────────────────────────
+async function loadShipment() {
+  const s = document.getElementById('track-sid').value.trim();
+  if (!s) return;
+  try {
+    const { status, data } = await api('GET', `/shipments/${s}`);
+    const el = document.getElementById('shipment-state');
+    if (status !== 200) {
+      el.innerHTML = `<div class="text-muted small text-center py-2">Shipment not found</div>`;
+      return;
+    }
+    const st = data.status || 'UNKNOWN';
+    const chipCls = { CREATED:'chip-created', PENDING_CLEARANCE_APPROVALS:'chip-pending',
+                      READY_FOR_CLEARANCE:'chip-ready', CLEARED:'chip-cleared' }[st] || 'chip-none';
+    const approvals = data.clearanceApprovals || [];
+    const hashLine = data.privateDataHash
+      ? `<div class="state-field"><span class="sf-label">Private hash</span><span class="sf-val hash-val">${data.privateDataHash.substring(0,20)}…</span></div>` : '';
+    el.innerHTML = `
+      <div class="state-field"><span class="sf-label">Status</span><span class="status-chip ${chipCls}">${st.replace(/_/g,' ')}</span></div>
+      <div class="state-field"><span class="sf-label">Route</span><span class="sf-val">${data.routeCode||'–'}</span></div>
+      <div class="state-field"><span class="sf-label">Cargo</span><span class="sf-val">${data.cargoDescription||'–'}</span></div>
+      <div class="state-field"><span class="sf-label">Created by</span><span class="sf-val" style="font-size:.75rem">${data.createdBy||'–'}</span></div>
+      <div class="state-field"><span class="sf-label">Approvals</span><span class="sf-val">${approvals.length} / 3</span></div>
+      ${hashLine}`;
+    if (currentTab === 3) loadApprovals(s);
+  } catch {}
+}
+
+// ── Role summary ───────────────────────────────────────────────────────
+function renderRoleSummary() {
+  const R = ROLES[role];
+  const rows = PERM_LABELS.map(([key, label]) => {
+    const ok = R.can.includes(key);
+    return `<div class="perm-row" style="color:${ok?'#065f46':'#d1d5db'}">
+      <i class="bi ${ok?'bi-check2-circle':'bi-x-circle'}" style="flex-shrink:0"></i>${label}</div>`;
+  }).join('');
+  document.getElementById('role-summary').innerHTML =
+    `<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem">
+      <span style="font-size:1.4rem">${R.icon}</span>
+      <div><div class="fw-bold" style="font-size:.9rem;color:#1a2744">${R.label}</div>
+      <div style="font-size:.72rem;color:#9ca3af">${R.msp}</div></div>
+    </div>${rows}`;
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────
+function v(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function who(ok, msg) {
+  return `<div class="who-badge ${ok?'who-ok':'who-no'}">
+    <i class="bi bi-${ok?'check-circle-fill':'x-circle-fill'}" style="flex-shrink:0;margin-top:.1rem"></i>
+    <span>${msg}</span></div>`;
+}
+function locked(msg) {
+  return `<div class="locked-msg"><span class="lock-icon">🔒</span>${msg}</div>`;
+}
+function resetBtn(id, html) {
+  const b = document.getElementById(id); if (!b) return;
+  b.disabled = false; b.innerHTML = html;
+}
+function syncSidFields(s) {
+  ['f-csid','f-asid','f-fsid','f-audit-sid'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = s;
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,295 @@
+# ---------------------------------------------------------------------------
+# configtx.yaml — Maritime Consortium Prototype
+# Fabric 2.5 — channel participation API (no system channel)
+# ---------------------------------------------------------------------------
+
+Organizations:
+
+  # ── Orderer organisations (institutional actors) ────────────────────────
+
+  - &OrdererPortAuthority
+    Name: OrdererPortAuthorityMSP
+    ID: OrdererPortAuthorityMSP
+    MSPDir: organizations/ordererOrganizations/port-authority.example.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererPortAuthorityMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererPortAuthorityMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererPortAuthorityMSP.admin')"
+    OrdererEndpoints:
+      - orderer0.port-authority.example.com:7050
+
+  - &OrdererCustomsAuthority
+    Name: OrdererCustomsAuthorityMSP
+    ID: OrdererCustomsAuthorityMSP
+    MSPDir: organizations/ordererOrganizations/customs-authority.example.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererCustomsAuthorityMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererCustomsAuthorityMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererCustomsAuthorityMSP.admin')"
+    OrdererEndpoints:
+      - orderer0.customs-authority.example.com:7050
+
+  - &OrdererRegulator
+    Name: OrdererRegulatorMSP
+    ID: OrdererRegulatorMSP
+    MSPDir: organizations/ordererOrganizations/regulator.example.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererRegulatorMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererRegulatorMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererRegulatorMSP.admin')"
+    OrdererEndpoints:
+      - orderer0.regulator.example.com:7050
+
+  # ── Peer organisations ─────────────────────────────────────────────────
+
+  - &ShippingLineA
+    Name: ShippingLineAMSP
+    ID: ShippingLineAMSP
+    MSPDir: organizations/peerOrganizations/shipping-line-a.example.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('ShippingLineAMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('ShippingLineAMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('ShippingLineAMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('ShippingLineAMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.shipping-line-a.example.com
+        Port: 7051
+
+  - &ShippingLineB
+    Name: ShippingLineBMSP
+    ID: ShippingLineBMSP
+    MSPDir: organizations/peerOrganizations/shipping-line-b.example.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('ShippingLineBMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('ShippingLineBMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('ShippingLineBMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('ShippingLineBMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.shipping-line-b.example.com
+        Port: 7051
+
+  - &PortAuthority
+    Name: PortAuthorityMSP
+    ID: PortAuthorityMSP
+    MSPDir: organizations/peerOrganizations/port-authority.example.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('PortAuthorityMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('PortAuthorityMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('PortAuthorityMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('PortAuthorityMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.port-authority.example.com
+        Port: 7051
+
+  - &CustomsAuthority
+    Name: CustomsAuthorityMSP
+    ID: CustomsAuthorityMSP
+    MSPDir: organizations/peerOrganizations/customs-authority.example.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('CustomsAuthorityMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('CustomsAuthorityMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('CustomsAuthorityMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('CustomsAuthorityMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.customs-authority.example.com
+        Port: 7051
+
+  - &Regulator
+    Name: RegulatorMSP
+    ID: RegulatorMSP
+    MSPDir: organizations/peerOrganizations/regulator.example.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('RegulatorMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('RegulatorMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('RegulatorMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('RegulatorMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.regulator.example.com
+        Port: 7051
+
+# ── Capabilities ──────────────────────────────────────────────────────────
+
+Capabilities:
+  Channel: &ChannelCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_5: true
+
+# ── Application defaults ─────────────────────────────────────────────────
+
+Application: &ApplicationDefaults
+  ACLs: &ACLsDefault
+    _lifecycle/CheckCommitReadiness: /Channel/Application/Writers
+    _lifecycle/CommitChaincodeDefinition: /Channel/Application/Writers
+    _lifecycle/QueryChaincodeDefinition: /Channel/Application/Writers
+    _lifecycle/QueryChaincodeDefinitions: /Channel/Application/Writers
+    lscc/ChaincodeExists: /Channel/Application/Readers
+    lscc/GetDeploymentSpec: /Channel/Application/Readers
+    lscc/GetChaincodeData: /Channel/Application/Readers
+    lscc/GetInstantiatedChaincodes: /Channel/Application/Readers
+    qscc/GetBlockByHash: /Channel/Application/Readers
+    qscc/GetBlockByNumber: /Channel/Application/Readers
+    qscc/GetBlockByTxID: /Channel/Application/Readers
+    qscc/GetTransactionByID: /Channel/Application/Readers
+    qscc/GetChainInfo: /Channel/Application/Readers
+    cscc/GetConfigBlock: /Channel/Application/Readers
+    peer/Propose: /Channel/Application/Writers
+    peer/ChaincodeToChaincode: /Channel/Application/Writers
+    event/Block: /Channel/Application/Readers
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+# ── Orderer defaults ─────────────────────────────────────────────────────
+
+Orderer: &OrdererDefaults
+  OrdererType: etcdraft
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+  EtcdRaft:
+    Consenters:
+      - Host: orderer0.port-authority.example.com
+        Port: 7050
+        ClientTLSCert: organizations/ordererOrganizations/port-authority.example.com/orderers/orderer0.port-authority.example.com/tls/server.crt
+        ServerTLSCert: organizations/ordererOrganizations/port-authority.example.com/orderers/orderer0.port-authority.example.com/tls/server.crt
+      - Host: orderer0.customs-authority.example.com
+        Port: 7050
+        ClientTLSCert: organizations/ordererOrganizations/customs-authority.example.com/orderers/orderer0.customs-authority.example.com/tls/server.crt
+        ServerTLSCert: organizations/ordererOrganizations/customs-authority.example.com/orderers/orderer0.customs-authority.example.com/tls/server.crt
+      - Host: orderer0.regulator.example.com
+        Port: 7050
+        ClientTLSCert: organizations/ordererOrganizations/regulator.example.com/orderers/orderer0.regulator.example.com/tls/server.crt
+        ServerTLSCert: organizations/ordererOrganizations/regulator.example.com/orderers/orderer0.regulator.example.com/tls/server.crt
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+  Capabilities:
+    <<: *OrdererCapabilities
+
+# ── Channel defaults ─────────────────────────────────────────────────────
+
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+
+# ── Channel Profiles ─────────────────────────────────────────────────────
+
+Profiles:
+  OperationsChannel:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererPortAuthority
+        - *OrdererCustomsAuthority
+        - *OrdererRegulator
+      Capabilities:
+        <<: *OrdererCapabilities
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *ShippingLineA
+        - *ShippingLineB
+        - *PortAuthority
+        - *CustomsAuthority
+        - *Regulator
+      Capabilities:
+        <<: *ApplicationCapabilities

@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Maritime Consortium — Test Console</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <style>
+    :root {
+      --navy: #1a2744;
+      --blue: #2d6a9f;
+      --blue-light: #dbeeff;
+      --green: #1a7a4a;
+      --green-light: #eaf8f0;
+      --red: #922b21;
+      --red-light: #fdecea;
+      --amber: #d35400;
+      --amber-light: #fef3e8;
+      --purple: #6c3483;
+      --teal: #117a8b;
+    }
+    body { background: #f0f4f8; font-family: 'Segoe UI', Arial, sans-serif; }
+    .navbar-brand { font-weight: 700; letter-spacing: .5px; }
+    .navbar { background: var(--navy) !important; }
+
+    /* Identity bar */
+    #identity-bar { background: white; border-bottom: 3px solid var(--blue); }
+    .id-btn { border: 2px solid transparent; border-radius: 8px; padding: 6px 14px;
+               font-size: .85rem; font-weight: 600; cursor: pointer; transition: all .2s; }
+    .id-btn:hover { opacity: .85; }
+    .id-btn.active { border-color: #333; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+    .id-shippingA  { background: var(--red-light);   color: var(--red);   }
+    .id-shippingB  { background: var(--blue-light);  color: var(--blue);  }
+    .id-port       { background: var(--amber-light);  color: var(--amber); }
+    .id-customs    { background: #e8f7f9; color: var(--teal); }
+    .id-regulator  { background: #f3e8ff; color: var(--purple); }
+
+    /* Section cards */
+    .domain-card { border: none; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.08); margin-bottom: 1.5rem; }
+    .domain-header { border-radius: 12px 12px 0 0 !important; font-weight: 700; font-size: .8rem;
+                     letter-spacing: 1px; text-transform: uppercase; padding: .55rem 1rem; }
+    .dh-governance { background: var(--navy); color: white; }
+    .dh-confidential { background: var(--red); color: white; }
+    .dh-transparency { background: var(--teal); color: white; }
+    .dh-compliance { background: var(--purple); color: white; }
+    .dh-interop { background: var(--green); color: white; }
+
+    /* Action rows */
+    .action-row { border-bottom: 1px solid #eee; padding: .9rem 1.1rem; }
+    .action-row:last-child { border-bottom: none; }
+    .action-label { font-weight: 600; font-size: .9rem; color: var(--navy); margin-bottom: .25rem; }
+    .action-desc { font-size: .78rem; color: #6c757d; margin-bottom: .5rem; }
+
+    /* Response box */
+    .response-box { font-family: 'Courier New', monospace; font-size: .78rem;
+                    background: #1e1e2e; color: #cdd6f4; border-radius: 8px;
+                    padding: .7rem 1rem; max-height: 220px; overflow-y: auto; white-space: pre-wrap;
+                    display: none; margin-top: .5rem; }
+    .response-box.show { display: block; }
+    .status-badge { font-size: .75rem; font-weight: 700; padding: 3px 10px;
+                    border-radius: 20px; display: inline-block; margin-bottom: .35rem; }
+    .status-2xx { background: var(--green-light); color: var(--green); }
+    .status-4xx { background: var(--red-light); color: var(--red); }
+    .status-5xx { background: var(--amber-light); color: var(--amber); }
+
+    /* JSON syntax colours */
+    .j-key    { color: #89dceb; }
+    .j-str    { color: #a6e3a1; }
+    .j-num    { color: #fab387; }
+    .j-bool   { color: #cba6f7; }
+    .j-null   { color: #f38ba8; }
+
+    /* Shipment ID bar */
+    #shipment-bar { background: white; border-bottom: 1px solid #dee2e6; }
+    .conn-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .conn-online  { background: #28a745; }
+    .conn-offline { background: #dc3545; }
+    .conn-checking { background: #ffc107; }
+
+    /* Steps progress */
+    .step-dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #dee2e6;
+                display: flex; align-items: center; justify-content: center;
+                font-size: .75rem; font-weight: 700; color: #aaa; background: white; }
+    .step-dot.done { border-color: var(--green); background: var(--green-light); color: var(--green); }
+    .step-dot.active { border-color: var(--amber); background: var(--amber-light); color: var(--amber); }
+
+    .btn-run { font-size: .82rem; padding: 4px 14px; }
+    input.form-control-sm { font-size: .82rem; }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-dark px-4 py-2">
+  <span class="navbar-brand"><i class="bi bi-anchor me-2"></i>Maritime Consortium — Test Console</span>
+  <span class="text-white-50 small">Hyperledger Fabric 2.5 prototype · localhost:8080</span>
+</nav>
+
+<!-- Identity bar -->
+<div id="identity-bar" class="px-4 py-2 d-flex align-items-center gap-3 flex-wrap">
+  <span class="fw-bold text-muted small">ACTIVE IDENTITY:</span>
+  <button class="id-btn id-shippingA active" onclick="setId('shippingA',this)">Shipping Line A</button>
+  <button class="id-btn id-shippingB"        onclick="setId('shippingB',this)">Shipping Line B</button>
+  <button class="id-btn id-port"             onclick="setId('port',this)">Port Authority</button>
+  <button class="id-btn id-customs"          onclick="setId('customs',this)">Customs Authority</button>
+  <button class="id-btn id-regulator"        onclick="setId('regulator',this)">Regulator</button>
+  <div class="ms-auto d-flex align-items-center gap-2">
+    <span class="conn-dot conn-checking" id="conn-dot"></span>
+    <span class="small text-muted" id="conn-label">Checking…</span>
+    <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="checkHealth()"><i class="bi bi-arrow-clockwise"></i></button>
+  </div>
+</div>
+
+<!-- Shared shipment ID bar -->
+<div id="shipment-bar" class="px-4 py-2 d-flex align-items-center gap-3">
+  <label class="fw-semibold small text-muted mb-0">SHIPMENT ID:</label>
+  <input id="global-sid" class="form-control form-control-sm" style="max-width:140px"
+         value="SH100" placeholder="e.g. SH100"/>
+  <label class="fw-semibold small text-muted mb-0 ms-3">DOCUMENT ID:</label>
+  <input id="global-did" class="form-control form-control-sm" style="max-width:140px"
+         value="DOC100" placeholder="e.g. DOC100"/>
+  <span class="small text-muted ms-2">(used across all actions below)</span>
+</div>
+
+<!-- Main content -->
+<div class="container-fluid px-4 pt-4">
+<div class="row g-4">
+
+<!-- LEFT COLUMN -->
+<div class="col-lg-6">
+
+  <!-- Domain 6: Governed Interoperability / Auth -->
+  <div class="domain-card card">
+    <div class="domain-header dh-interop"><i class="bi bi-shield-lock me-2"></i>6 · Governed Interoperability — Authentication</div>
+    <div class="card-body p-0">
+
+      <div class="action-row">
+        <div class="action-label">Health check <span class="badge bg-success ms-1">GET /health</span></div>
+        <div class="action-desc">No authentication required. Confirms API is live.</div>
+        <button class="btn btn-sm btn-success btn-run" onclick="run('health')"><i class="bi bi-play-fill me-1"></i>Run</button>
+        <div id="resp-health" class="response-box"></div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-label">Unauthenticated request <span class="badge bg-danger ms-1">Expected 401</span></div>
+        <div class="action-desc">No bearer token — should be rejected.</div>
+        <button class="btn btn-sm btn-danger btn-run" onclick="run('no-auth')"><i class="bi bi-play-fill me-1"></i>Run</button>
+        <div id="resp-no-auth" class="response-box"></div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-label">Invalid token <span class="badge bg-danger ms-1">Expected 401</span></div>
+        <div class="action-desc">Bearer token "badtoken" — should be rejected.</div>
+        <button class="btn btn-sm btn-danger btn-run" onclick="run('bad-auth')"><i class="bi bi-play-fill me-1"></i>Run</button>
+        <div id="resp-bad-auth" class="response-box"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Domain 1: Governance Neutrality -->
+  <div class="domain-card card">
+    <div class="domain-header dh-governance"><i class="bi bi-diagram-3 me-2"></i>1 · Governance Neutrality — Shipment Lifecycle</div>
+    <div class="card-body p-0">
+
+      <div class="action-row">
+        <div class="action-label">Create shipment <span class="badge bg-primary ms-1">POST /shipments</span></div>
+        <div class="action-desc">Only Shipping Line A or B may create. Try with Regulator selected to see 403.</div>
+        <div class="d-flex gap-2 mb-2">
+          <input id="route-input" class="form-control form-control-sm" style="max-width:140px" value="RT-EAST-01" placeholder="Route code"/>
+          <input id="cargo-input" class="form-control form-control-sm" style="max-width:240px" value="Container of electronics" placeholder="Cargo description"/>
+        </div>
+        <button class="btn btn-sm btn-primary btn-run" onclick="run('create-shipment')"><i class="bi bi-play-fill me-1"></i>Run</button>
+        <div id="resp-create-shipment" class="response-box"></div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-label">Read shipment <span class="badge bg-secondary ms-1">GET /shipments/:id</span></div>
+        <div class="action-desc">Public data — any authenticated organisation can read.</div>
+        <button class="btn btn-sm btn-secondary btn-run" onclick="run('read-shipment')"><i class="bi bi-play-fill me-1"></i>Run</button>
+        <div id="resp-read-shipment" class="response-box"></div>
+      </div>
+
+      <!-- Clearance steps with progress -->
+      <div class="action-row">
+        <div class="action-label">Clearance approval flow <span class="badge bg-warning text-dark ms-1">3-party</span></div>
+        <div class="action-desc">Three organisations must approve before finalisation succeeds. Run each step in order.</div>
+        <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+          <div class="step-dot" id="step1">1</div>
+          <div class="border-top flex-grow-1" style="max-width:40px"></div>
+          <div class="step-dot" id="step2">2</div>
+          <div class="border-top flex-grow-1" style="max-width:40px"></div>
+          <div class="step-dot" id="step3">3</div>
+          <div class="border-top flex-grow-1" style="max-width:40px"></div>
+          <div class="step-dot" id="step4"><i class="bi bi-flag-fill" style="font-size:.6rem"></i></div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-sm btn-outline-warning btn-run" onclick="runStep(1)">
+            <i class="bi bi-play-fill me-1"></i>Step 1 — Approve <small>(active identity)</small>
+          </button>
+          <button class="btn btn-sm btn-outline-warning btn-run" onclick="runStep(2)">
+            <i class="bi bi-play-fill me-1"></i>Step 2 — Approve <small>(active identity)</small>
+          </button>
+          <button class="btn btn-sm btn-outline-warning btn-run" onclick="runStep(3)">
+            <i class="bi bi-play-fill me-1"></i>Step 3 — Approve <small>(active identity)</small>
+          </button>
+          <button class="btn btn-sm btn-outline-danger btn-run" onclick="run('finalize-early')">
+            <i class="bi bi-x-circle me-1"></i>Finalize early <small class="text-danger">(expect 400)</small>
+          </button>
+          <button class="btn btn-sm btn-success btn-run" onclick="run('finalize')">
+            <i class="bi bi-check-circle me-1"></i>Finalize <small>(after all 3)</small>
+          </button>
+        </div>
+        <div id="resp-clearance" class="response-box"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- end left col -->
+
+<!-- RIGHT COLUMN -->
+<div class="col-lg-6">
+
+  <!-- Domain 2: Enforceable Confidentiality -->
+  <div class="domain-card card">
+    <div class="domain-header dh-confidential"><i class="bi bi-lock me-2"></i>2 · Enforceable Confidentiality — Private Data</div>
+    <div class="card-body p-0">
+
+      <div class="action-row">
+        <div class="action-label">Submit commercial details <span class="badge bg-danger ms-1">POST /commercial-details</span></div>
+        <div class="action-desc">Only Shipping Line A may write private data to the collection.</div>
+        <div class="row g-2 mb-2">
+          <div class="col"><input id="cv-input" class="form-control form-control-sm" value="$450,000" placeholder="Contract value"/></div>
+          <div class="col"><input id="ins-input" class="form-control form-control-sm" value="INS-2024-881" placeholder="Insurance ref"/></div>
+          <div class="col"><input id="client-input" class="form-control form-control-sm" value="ACME Corp" placeholder="Client name"/></div>
+        </div>
+        <button class="btn btn-sm btn-danger btn-run" onclick="run('submit-commercial')"><i class="bi bi-play-fill me-1"></i>Run</button>
+        <div id="resp-submit-commercial" class="response-box"></div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-label">Read commercial details — authorised <span class="badge bg-success ms-1">GET · Expected 200</span></div>
+        <div class="action-desc">Select Shipping Line A, Port Authority, Customs, or Regulator — all are collection members.</div>
+        <button class="btn btn-sm btn-success btn-run" onclick="run('read-commercial')"><i class="bi bi-play-fill me-1"></i>Run</button>
+        <div id="resp-read-commercial" class="response-box"></div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-label">Read commercial details — Shipping Line B <span class="badge bg-danger ms-1">Expected 403</span></div>
+        <div class="action-desc">Competitor isolation: ShippingLineBMSP is not a collection member.</div>
+        <button class="btn btn-sm btn-danger btn-run" onclick="run('read-commercial-b')"><i class="bi bi-play-fill me-1"></i>Run (forces shippingB)</button>
+        <div id="resp-read-commercial-b" class="response-box"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Domain 3: Bounded Transparency -->
+  <div class="domain-card card">
+    <div class="domain-header dh-transparency"><i class="bi bi-eye me-2"></i>3 · Bounded Transparency — Audit Trail</div>
+    <div class="card-body p-0">
+
+      <div class="action-row">
+        <div class="action-label">Read audit trail <span class="badge ms-1" style="background:#117a8b">GET /shipments/:id/audit</span></div>
+        <div class="action-desc">Full event history — CREATED, COMMERCIAL_DETAILS_SUBMITTED, CLEARANCE_APPROVED ×3, CLEARANCE_FINALIZED.</div>
+        <button class="btn btn-sm btn-run" style="background:#117a8b;color:white" onclick="run('audit')"><i class="bi bi-play-fill me-1"></i>Run</button>
+        <div id="resp-audit" class="response-box"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Domain 5: Hybrid Compliance — Documents -->
+  <div class="domain-card card">
+    <div class="domain-header dh-compliance"><i class="bi bi-file-earmark-check me-2"></i>5 · Hybrid Compliance — Document Hash Anchoring</div>
+    <div class="card-body p-0">
+
+      <div class="action-row">
+        <div class="action-label">Upload document <span class="badge ms-1" style="background:var(--purple)">POST /documents/upload</span></div>
+        <div class="action-desc">Stores file off-chain; anchors SHA-256 hash on-chain via RecordDocumentHash chaincode.</div>
+        <div class="mb-2">
+          <input id="doc-content" class="form-control form-control-sm"
+                 value="Official compliance certificate for shipment - certified by Customs Authority"
+                 placeholder="Document content (plain text)"/>
+          <div class="form-text">Will be base64-encoded and sent as document body.</div>
+        </div>
+        <button class="btn btn-sm btn-run" style="background:var(--purple);color:white" onclick="run('upload-doc')"><i class="bi bi-play-fill me-1"></i>Upload</button>
+        <div id="resp-upload-doc" class="response-box"></div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-label">Verify document integrity <span class="badge bg-success ms-1">Expected matches: true</span></div>
+        <div class="action-desc">Re-hashes stored file and compares with on-chain record.</div>
+        <button class="btn btn-sm btn-success btn-run" onclick="run('verify-doc')"><i class="bi bi-play-fill me-1"></i>Verify</button>
+        <div id="resp-verify-doc" class="response-box"></div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-label">Simulate tampering + re-verify <span class="badge bg-danger ms-1">Expected matches: false</span></div>
+        <div class="action-desc">
+          Overwrites the stored file, then re-verifies to prove hash mismatch is detected.<br/>
+          <span class="text-danger small fw-semibold">Requires docker exec access from the terminal:</span>
+        </div>
+        <div class="bg-dark text-white rounded px-3 py-2 my-2" style="font-size:.78rem;font-family:monospace">
+          docker exec api-gateway sh -c 'echo "TAMPERED" > /storage/documents/<span id="tamper-did">DOC100</span>'
+        </div>
+        <button class="btn btn-sm btn-warning btn-run" onclick="run('verify-tampered')"><i class="bi bi-shield-x me-1"></i>Verify after tamper</button>
+        <div id="resp-verify-tampered" class="response-box"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- end right col -->
+</div><!-- end row -->
+</div><!-- end container -->
+
+<footer class="text-center text-muted py-3 small">
+  Maritime Consortium Prototype · Hyperledger Fabric 2.5 · RAFT Consensus · All requests go to <code>http://localhost:8080</code>
+</footer>
+
+<script>
+const API = 'http://localhost:8080';
+let currentId = 'shippingA';
+let approvalStep = 0;
+
+function getSid() { return document.getElementById('global-sid').value.trim() || 'SH100'; }
+function getDid() { return document.getElementById('global-did').value.trim() || 'DOC100'; }
+function getHeaders(token) {
+  const h = { 'Content-Type': 'application/json' };
+  if (token !== false) h['Authorization'] = 'Bearer ' + (token || currentId);
+  return h;
+}
+
+function setId(id, btn) {
+  currentId = id;
+  document.querySelectorAll('.id-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // update tamper command
+  document.getElementById('tamper-did').textContent = getDid();
+}
+
+document.getElementById('global-did').addEventListener('input', () => {
+  document.getElementById('tamper-did').textContent = getDid();
+});
+
+async function checkHealth() {
+  const dot = document.getElementById('conn-dot');
+  const lbl = document.getElementById('conn-label');
+  dot.className = 'conn-dot conn-checking';
+  lbl.textContent = 'Checking…';
+  try {
+    const r = await fetch(API + '/health');
+    if (r.ok) { dot.className = 'conn-dot conn-online'; lbl.textContent = 'API online'; }
+    else { dot.className = 'conn-dot conn-offline'; lbl.textContent = 'API error'; }
+  } catch {
+    dot.className = 'conn-dot conn-offline'; lbl.textContent = 'API unreachable';
+  }
+}
+checkHealth();
+
+function syntaxHL(json) {
+  return json
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+      if (/^"/.test(m)) {
+        if (/:$/.test(m)) return `<span class="j-key">${m}</span>`;
+        return `<span class="j-str">${m}</span>`;
+      }
+      if (/true|false/.test(m)) return `<span class="j-bool">${m}</span>`;
+      if (/null/.test(m))       return `<span class="j-null">${m}</span>`;
+      return `<span class="j-num">${m}</span>`;
+    });
+}
+
+function showResp(boxId, status, data) {
+  const box = document.getElementById('resp-' + boxId);
+  const cls = status >= 500 ? 'status-5xx' : status >= 400 ? 'status-4xx' : 'status-2xx';
+  const icon = status >= 400 ? '✗' : '✓';
+  const pretty = JSON.stringify(data, null, 2);
+  box.innerHTML = `<span class="status-badge ${cls}">${icon} HTTP ${status}</span>\n${syntaxHL(pretty)}`;
+  box.classList.add('show');
+}
+
+async function apiCall(boxId, method, path, body, token) {
+  const box = document.getElementById('resp-' + boxId);
+  box.innerHTML = '<span class="text-warning">Loading…</span>';
+  box.classList.add('show');
+  try {
+    const opts = { method, headers: getHeaders(token) };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(API + path, opts);
+    let data;
+    try { data = await r.json(); } catch { data = { raw: await r.text() }; }
+    showResp(boxId, r.status, data);
+    return r.status;
+  } catch (e) {
+    box.innerHTML = `<span class="status-badge status-5xx">✗ Network Error</span>\n${e.message}\n\nMake sure the network is running:\n  bash start.sh`;
+    return 0;
+  }
+}
+
+async function run(action) {
+  const sid = getSid();
+  const did = getDid();
+  switch(action) {
+    case 'health':
+      await apiCall('health', 'GET', '/health', null, false);
+      checkHealth(); break;
+    case 'no-auth':
+      await apiCall('no-auth', 'GET', `/shipments/${sid}`, null, false); break;
+    case 'bad-auth':
+      await apiCall('bad-auth', 'GET', `/shipments/${sid}`, null, 'badtoken'); break;
+    case 'create-shipment':
+      await apiCall('create-shipment', 'POST', '/shipments', {
+        shipmentId: sid,
+        routeCode: document.getElementById('route-input').value,
+        cargoDescription: document.getElementById('cargo-input').value
+      }); break;
+    case 'read-shipment':
+      await apiCall('read-shipment', 'GET', `/shipments/${sid}`); break;
+    case 'finalize-early':
+      await apiCall('clearance', 'POST', `/shipments/${sid}/clearance/finalize`); break;
+    case 'finalize':
+      await apiCall('clearance', 'POST', `/shipments/${sid}/clearance/finalize`); break;
+    case 'submit-commercial':
+      await apiCall('submit-commercial', 'POST', `/shipments/${sid}/commercial-details`, {
+        commercialDetails: {
+          contractValue: document.getElementById('cv-input').value,
+          insuranceRef: document.getElementById('ins-input').value,
+          clientName: document.getElementById('client-input').value
+        }
+      }); break;
+    case 'read-commercial':
+      await apiCall('read-commercial', 'GET', `/shipments/${sid}/commercial-details`); break;
+    case 'read-commercial-b':
+      await apiCall('read-commercial-b', 'GET', `/shipments/${sid}/commercial-details`, null, 'shippingB'); break;
+    case 'audit':
+      await apiCall('audit', 'GET', `/shipments/${sid}/audit`); break;
+    case 'upload-doc':
+      const content = document.getElementById('doc-content').value;
+      const b64 = btoa(unescape(encodeURIComponent(content)));
+      await apiCall('upload-doc', 'POST', '/documents/upload', {
+        shipmentId: sid, documentId: did,
+        documentName: did + '.pdf', content: b64
+      }); break;
+    case 'verify-doc':
+      await apiCall('verify-doc', 'POST', `/documents/${did}/verify`); break;
+    case 'verify-tampered':
+      await apiCall('verify-tampered', 'POST', `/documents/${did}/verify`); break;
+  }
+}
+
+async function runStep(step) {
+  const sid = getSid();
+  const status = await apiCall('clearance', 'POST', `/shipments/${sid}/clearance/approve`);
+  if (status === 202) {
+    approvalStep = Math.max(approvalStep, step);
+    for (let i = 1; i <= 3; i++) {
+      const el = document.getElementById('step' + i);
+      if (i < step) { el.className = 'step-dot done'; el.innerHTML = '<i class="bi bi-check2" style="font-size:.7rem"></i>'; }
+      else if (i === step) { el.className = 'step-dot done'; el.innerHTML = '<i class="bi bi-check2" style="font-size:.7rem"></i>'; }
+      else el.className = 'step-dot';
+    }
+    if (step === 3) {
+      document.getElementById('step4').className = 'step-dot active';
+      document.getElementById('step4').innerHTML = '<i class="bi bi-flag-fill" style="font-size:.6rem;color:var(--amber)"></i>';
+    }
+  }
+}
+</script>
+</body>
+</html>

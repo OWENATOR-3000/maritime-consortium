@@ -1,0 +1,23 @@
+Test #8: PortAuthority approves clearance
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/shipments/SH001/clearance/approve
+Token: port
+Request Body: none
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "shipmentId": "SH001",
+  "routeCode": "RT-EAST-01",
+  "cargoDescription": "Container electronics",
+  "createdBy": "ShippingLineAMSP",
+  "status": "READY_FOR_CLEARANCE",
+  "clearanceApprovals": [
+    "ShippingLineAMSP",
+    "CustomsAuthorityMSP",
+    "PortAuthorityMSP"
+  ],
+  "documentHashes": [],
+  "createdAt": 1780177980
+}

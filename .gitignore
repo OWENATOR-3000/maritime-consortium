@@ -1,0 +1,56 @@
+# ── Node.js ───────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-error.log
+.npm
+
+# ── Environment / secrets ─────────────────────────────────────────────
+.env
+.env.*
+*.pem
+*.key
+
+# ── Build & coverage ──────────────────────────────────────────────────
+dist/
+build/
+coverage/
+tmp/
+artifacts/
+
+# ── Off-chain document storage (uploaded files, generated at runtime) ─
+storage/documents/*
+!storage/documents/.gitkeep
+
+# ── Generated crypto material (runtime artefacts, not source) ─────────
+crypto/
+crypto-material/
+
+# ── Documents (Word, PDF) ─────────────────────────────────────────────
+*.docx
+*.pdf
+
+# ── Documentation HTML (generated, not source code) ──────────────────
+Maritime_System_Overview.html
+implementation_plan_roadmap.html
+
+# ── Dissertation / research files ────────────────────────────────────
+blockchain.txt
+probability-cheat-sheet.*
+Figure_6_*.png
+Figure_6_*.drawio
+
+# ── Client correspondence & business docs ────────────────────────────
+Client_Response_Letter*
+Scope_Addendum_SA001.*
+QUOTE_FOR_MVP*.pdf
+Project\ Cost\ Estimate*
+Prototype\ Implementation*
+
+# ── Internal / workspace artefacts ───────────────────────────────────
+.sixth/
+network;C/
+
+# ── OS ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,13 @@
+Test #13: ShippingLineA submits commercial details
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/shipments/SH001/commercial-details
+Token: shippingA
+Request Body: {"commercialDetails":{"contractValue":"$450,000","insuranceRef":"INS-2024-881","clientName":"ACME Corp"}}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "shipmentId": "SH001",
+  "privateDataHash": "d6d873493a375019ac2e31f921f47f6e33eb74555ed71d857744765442d22439"
+}
