@@ -222,6 +222,79 @@ Each test outputs `PASS` or `FAIL`. Evidence files for all 20 tests are saved to
 
 ---
 
+## Using the GUI (Browser Interface)
+
+Two browser-based interfaces are included as alternatives to using the terminal or `curl`. Both connect directly to the API gateway running at `http://localhost:8080` — the system must be started with `bash start.sh` before opening either file.
+
+Open either file by double-clicking it in your file explorer, or by dragging it into a browser window.
+
+---
+
+### Maritime Consortium Portal — `portal.html`
+
+A guided workflow interface that walks through the full shipment lifecycle step by step.
+
+**Login**
+
+When you open the portal, you are presented with a login screen. Select an organisation identity to proceed:
+
+- **Shipping Line A** — can create shipments, submit commercial details, approve clearance
+- **Shipping Line B** — can create shipments; cannot access Shipping Line A private data
+- **Port Authority** — can approve clearance
+- **Customs Authority** — can approve clearance, upload compliance documents
+- **Regulator** — can view audit trails and verify documents
+
+You can switch identity at any time by clicking the identity pill in the top bar.
+
+**Workflow Tabs**
+
+The portal is organised into six sequential tabs:
+
+| Tab | Function |
+|---|---|
+| **1 — Create Shipment** | Register a new cargo shipment on the ledger. Fill in a Shipment ID, route code, and cargo description. Only shipping lines may do this — selecting an authority identity will show the rejection response. |
+| **2 — Commercial Details** | Submit or retrieve confidential commercial data (contract value, insurance reference). Shipping Line A submits its own data. Switch to Shipping Line B and attempt to read it to observe the access denial. |
+| **3 — Clearance Approval** | Record approvals from the three required parties. The tab shows three signatory indicators (Shipping Line A, Customs Authority, Port Authority). Switch identity for each and click Approve — the indicators update as each approval lands on-chain. |
+| **4 — Finalise Clearance** | Attempt to finalise the shipment clearance. If all three approvals are present the ledger accepts it. If any approval is missing the ledger rejects it with a descriptive error — try finalising early to see this enforced. |
+| **5 — Documents** | Upload a compliance document (base64 file picker provided) to store it off-chain and anchor its hash on-chain. Then verify it to confirm integrity. The tab also supports simulating a tampered document to observe the hash mismatch response. |
+| **6 — Audit Trail** | Retrieve the full transaction history for a shipment. Only the Regulator identity can access this tab's data. |
+
+All API responses are displayed inline beneath each form in formatted JSON.
+
+---
+
+### Test Console — `test-console.html`
+
+A developer-facing interface that mirrors the full 20-test validation suite with individual Run buttons for each test case.
+
+**Identity Bar**
+
+At the top of the page, click any organisation button to set the active identity for subsequent requests:
+
+```
+Shipping Line A  |  Shipping Line B  |  Port Authority  |  Customs Authority  |  Regulator
+```
+
+**Shipment ID / Document ID Bar**
+
+Enter a Shipment ID and Document ID in the input fields at the top — these are shared across all actions on the page so you only set them once.
+
+**Running Tests**
+
+Each test case is listed as a row with:
+- the endpoint and HTTP method shown as a badge
+- a brief description of what is being tested
+- a **Run** button
+- an inline response box that shows the HTTP status and JSON response immediately after the button is clicked
+
+Tests marked in **red** are negative tests — they are expected to fail (e.g. a `401` rejection or a `403` access denial). A correct response for a negative test is the expected error code appearing in the response box.
+
+The clearance approval section includes four sequential step buttons — run them in order to simulate the full three-party approval flow, then attempt early finalisation to confirm the rejection is enforced before all approvals are collected.
+
+A connection status indicator in the top bar shows whether the API gateway at `http://localhost:8080` is reachable. If it shows a red dot, the system is not running — run `bash start.sh` first.
+
+---
+
 ## Stopping the System
 
 ```bash
