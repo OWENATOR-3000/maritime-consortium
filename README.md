@@ -16,7 +16,80 @@ The following must be installed and running on the host machine before starting 
 | bash | any | All scripts are bash |
 | Python 3 | 3.8+ | Used by the test suite for JSON formatting |
 
-> **Important:** Docker must be running and your user must have permission to execute `docker` commands without `sudo`. On Linux, add your user to the `docker` group: `sudo usermod -aG docker $USER` then log out and back in.
+The network brings up **10 containers** at once (5 peers, 3 orderers, 1 CLI, 1 API gateway). Make sure the host has at least **4 GB of RAM allocated to Docker** and **5 GB of free disk space** for container images.
+
+---
+
+### Installing Docker
+
+If Docker is not yet installed, follow the instructions for your operating system below. If you already have Docker installed, skip to [Verifying Docker](#verifying-docker).
+
+#### Windows
+
+1. Download **Docker Desktop** from [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/).
+2. Run the installer. When prompted, leave **"Use WSL 2 instead of Hyper-V"** checked (this is the default and is required).
+3. Restart your computer when the installer asks.
+4. Launch **Docker Desktop** from the Start menu and wait for the whale icon in the system tray to stop animating — this means the Docker engine has started.
+5. Open **Docker Desktop → Settings → Resources** and set memory to at least **4 GB**, then click **Apply & Restart**.
+6. Run all commands in this guide from **Git Bash**, **WSL 2**, or another bash-compatible terminal — the scripts will not run in PowerShell or Command Prompt.
+
+#### macOS
+
+1. Download **Docker Desktop for Mac** from [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) (choose the Apple Silicon or Intel chip build that matches your Mac).
+2. Drag Docker to the Applications folder and launch it.
+3. Approve the system permission prompts (Docker needs privileged helper access).
+4. Wait for the whale icon in the menu bar to stop animating.
+5. Open **Docker Desktop → Settings → Resources** and set memory to at least **4 GB**, then click **Apply & Restart**.
+
+#### Linux (Ubuntu/Debian)
+
+```bash
+# Remove any old versions first
+sudo apt-get remove docker docker-engine docker.io containerd runc
+
+# Install Docker Engine via the official convenience script
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# Install the Compose plugin
+sudo apt-get update
+sudo apt-get install docker-compose-plugin
+
+# Allow your user to run docker without sudo
+sudo usermod -aG docker $USER
+```
+
+After running `usermod`, **log out and log back in** (or restart the terminal session) for the group change to take effect.
+
+#### Linux (Fedora/RHEL/CentOS)
+
+```bash
+sudo dnf -y install dnf-plugins-core
+sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+sudo dnf install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER
+```
+
+Log out and back in afterwards for the group change to take effect.
+
+---
+
+### Verifying Docker
+
+Before running the system, confirm Docker is installed correctly and running:
+
+```bash
+docker --version
+docker compose version
+docker run hello-world
+```
+
+- `docker --version` should print a version `24.x` or higher.
+- `docker compose version` should print a version `2.x` (this confirms the Compose **plugin** is installed — the standalone `docker-compose` with a hyphen is a different, older tool and is not used by this project).
+- `docker run hello-world` should download a tiny test image and print a "Hello from Docker!" confirmation message. If this fails with a permission error, you have not been added to the `docker` group, or you have not logged out/in after being added — repeat the `usermod` step above and restart your terminal.
+
+> **Important:** Docker must be left running in the background for the entire time the system is up. On Windows and macOS this means keeping Docker Desktop open. On Linux, the Docker daemon runs as a service automatically once installed (`systemctl status docker` to confirm).
 
 ---
 
