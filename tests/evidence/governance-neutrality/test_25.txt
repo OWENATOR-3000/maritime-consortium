@@ -1,0 +1,26 @@
+Test #25: PortAuthority votes YES to suspend — quorum reached (3/3)
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/governance/proposals/ATTACK-SUSPEND-1/vote
+Token: port
+Request Body: {"choice":"YES"}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "proposalId": "ATTACK-SUSPEND-1",
+  "changeType": "SUSPEND_MEMBER",
+  "payload": {
+    "targetMsp": "ShippingLineBMSP"
+  },
+  "proposedBy": "ShippingLineAMSP",
+  "status": "APPROVED",
+  "votes": {
+    "ShippingLineAMSP": "YES",
+    "CustomsAuthorityMSP": "YES",
+    "PortAuthorityMSP": "YES"
+  },
+  "createdAt": 1782078479,
+  "approvedAt": 1782078486,
+  "requiredVotes": 3
+}

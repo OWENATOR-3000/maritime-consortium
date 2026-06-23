@@ -1,0 +1,20 @@
+Test #36: ShippingLineA proposes revoking ShippingLineB
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/governance/proposals
+Token: shippingA
+Request Body: {"proposalId":"ATTACK-REVOKE-1","changeType":"REVOKE_MEMBER","payload":{"targetMsp":"ShippingLineBMSP"}}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "proposalId": "ATTACK-REVOKE-1",
+  "changeType": "REVOKE_MEMBER",
+  "payload": {
+    "targetMsp": "ShippingLineBMSP"
+  },
+  "proposedBy": "ShippingLineAMSP",
+  "status": "OPEN",
+  "votes": {},
+  "createdAt": 1782078510
+}

@@ -1,0 +1,17 @@
+name: shipping-line-a
+version: 1.0.0
+client:
+  organization: ShippingLineA
+organizations:
+  ShippingLineA:
+    mspid: ShippingLineAMSP
+    peers:
+      - peer0.shipping-line-a.example.com
+peers:
+  peer0.shipping-line-a.example.com:
+    url: grpcs://localhost:7051
+    tlsCACerts:
+      path: ../network/organizations/peerOrganizations/shipping-line-a.example.com/tlsca/tlsca.shipping-line-a.example.com-cert.pem
+    grpcOptions:
+      ssl-target-name-override: peer0.shipping-line-a.example.com
+      grpc.ssl_target_name_override: peer0.shipping-line-a.example.com

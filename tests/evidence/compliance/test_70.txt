@@ -1,0 +1,23 @@
+Test #70: Violation list confirms RESOLVED status
+Type: POSITIVE
+Method: GET
+URL: http://localhost:8080/shipments/SH001/compliance
+Token: regulator
+Request Body: none
+Expected Status: 200
+Actual Status: 200
+Response:
+[
+  {
+    "violationId": "V-RESOLVE-TEST",
+    "shipmentId": "SH001",
+    "violationType": "DOCUMENTATION_MISMATCH",
+    "details": "Manifest weight differs from declared weight",
+    "flaggedBy": "RegulatorMSP",
+    "status": "RESOLVED",
+    "flaggedAt": 1782078587,
+    "resolutionNotes": "Reviewed and confirmed within tolerance",
+    "resolvedBy": "RegulatorMSP",
+    "resolvedAt": 1782078590
+  }
+]

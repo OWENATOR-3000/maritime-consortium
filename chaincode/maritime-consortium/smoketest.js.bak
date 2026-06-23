@@ -1,0 +1,109 @@
+'use strict';
+
+// Minimal in-memory mock of the Fabric ctx.stub surface used by our modules,
+// just enough to exercise the governance logic without a real network.
+function makeMockCtx(callerMsp) {
+  const store = new Map();
+  let txCounter = 0;
+
+  return {
+    stub: {
+      getTxID: () => `tx${++txCounter}`,
+      getTxTimestamp: () => ({ seconds: { low: 1000000 + txCounter } }),
+      putState: async (key, buf) => { store.set(key, buf); },
+      getState: async (key) => store.get(key) || Buffer.alloc(0),
+      getStateByRange: async (start, end) => {
+        const keys = Array.from(store.keys()).filter(k => k >= start && k < end).sort();
+        let i = 0;
+        return {
+          next: async () => {
+            if (i >= keys.length) return { done: true };
+            const value = store.get(keys[i]);
+            i++;
+            return { done: false, value: { value } };
+          },
+          close: async () => {}
+        };
+      }
+    },
+    clientIdentity: { getMSPID: () => callerMsp },
+    __store: store
+  };
+}
+
+const { MembershipService, MEMBER_STATUS } = require('./lib/membership-service');
+const { GovernanceRules } = require('./lib/governance-rules');
+const { GovernanceService } = require('./lib/governance-service');
+const AuditService = require('./lib/audit-service');
+
+(async () => {
+  console.log('--- Test 1: founding members default ACTIVE ---');
+  let ctx = makeMockCtx('ShippingLineAMSP');
+  const active = await MembershipService.getActiveMembers(ctx);
+  console.log('Active count (expect 5):', active.length);
+  if (active.length !== 5) throw new Error('FAIL: expected 5 founding active members');
+
+  console.log('--- Test 2: quorum math ---');
+  const req5 = await GovernanceRules.getRequiredVotes(ctx, 5);
+  const req4 = await GovernanceRules.getRequiredVotes(ctx, 4);
+  console.log('Required votes for 5 active (expect 3):', req5);
+  console.log('Required votes for 4 active (expect 3):', req4);
+  if (req5 !== 3 || req4 !== 3) throw new Error('FAIL: majority math wrong');
+
+  console.log('--- Test 3: propose + vote to suspend a member ---');
+  ctx = makeMockCtx('ShippingLineAMSP');
+  await GovernanceService.proposeChange(ctx, 'PROP1', 'SUSPEND_MEMBER',
+    { targetMsp: 'ShippingLineBMSP' }, 'ShippingLineAMSP');
+
+  let proposal = await GovernanceService.vote(ctx, 'PROP1', 'YES', 'CustomsAuthorityMSP');
+  console.log('After 1 YES vote, status (expect OPEN):', proposal.status);
+  if (proposal.status !== 'OPEN') throw new Error('FAIL: should not be approved yet');
+
+  proposal = await GovernanceService.vote(ctx, 'PROP1', 'YES', 'PortAuthorityMSP');
+  console.log('After 2 YES votes total (proposer counts as 0 unless they vote), status:', proposal.status);
+
+  // Proposer did not auto-vote, so cast their own vote too to reach 3
+  proposal = await GovernanceService.vote(ctx, 'PROP1', 'YES', 'ShippingLineAMSP');
+  console.log('After 3 YES votes, status (expect APPROVED):', proposal.status);
+  if (proposal.status !== 'APPROVED') throw new Error('FAIL: should be approved at 3/5');
+
+  console.log('--- Test 4: suspended member is now blocked ---');
+  const isActive = await MembershipService.isActive(ctx, 'ShippingLineBMSP');
+  console.log('ShippingLineBMSP active after suspension (expect false):', isActive);
+  if (isActive) throw new Error('FAIL: should be suspended');
+
+  let blocked = false;
+  try {
+    await MembershipService.assertActive(ctx, 'ShippingLineBMSP');
+  } catch (e) {
+    blocked = true;
+    console.log('assertActive correctly threw:', e.message);
+  }
+  if (!blocked) throw new Error('FAIL: assertActive should have thrown');
+
+  console.log('--- Test 5: quorum recalculates with fewer active members ---');
+  const activeAfterSuspend = await MembershipService.getActiveMembers(ctx);
+  console.log('Active count after suspension (expect 4):', activeAfterSuspend.length);
+  const reqAfter = await GovernanceRules.getRequiredVotes(ctx, activeAfterSuspend.length);
+  console.log('Required votes now (expect 3, i.e. majority of 4):', reqAfter);
+
+  console.log('--- Test 6: governance audit trail recorded everything ---');
+  const trail = await AuditService.getGovernanceAuditTrail(ctx);
+  console.log('Governance audit event count:', trail.length);
+  console.log(trail.map(e => e.eventType));
+
+  console.log('--- Test 7: double-voting rejected ---');
+  let doubleVoteBlocked = false;
+  try {
+    await GovernanceService.vote(ctx, 'PROP1', 'YES', 'ShippingLineAMSP');
+  } catch (e) {
+    doubleVoteBlocked = true;
+    console.log('Double vote correctly rejected:', e.message);
+  }
+  if (!doubleVoteBlocked) throw new Error('FAIL: double vote should be rejected');
+
+  console.log('\nALL SMOKE TESTS PASSED');
+})().catch(err => {
+  console.error('SMOKE TEST FAILURE:', err.message);
+  process.exit(1);
+});

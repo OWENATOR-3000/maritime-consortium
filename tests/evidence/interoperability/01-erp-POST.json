@@ -1,0 +1,22 @@
+{
+  "persona": "erp",
+  "method": "POST",
+  "url": "/shipments",
+  "body": {
+    "shipmentId": "SH-INTEROP-1",
+    "routeCode": "RT-AUTO-01",
+    "cargoDescription": "ERP-originated booking"
+  },
+  "status": 202,
+  "response": {
+    "shipmentId": "SH-INTEROP-1",
+    "routeCode": "RT-AUTO-01",
+    "cargoDescription": "ERP-originated booking",
+    "createdBy": "ShippingLineAMSP",
+    "status": "CREATED",
+    "clearanceApprovals": [],
+    "documentHashes": [],
+    "createdAt": 1782236751
+  },
+  "timestamp": "2026-06-23T17:45:53.222Z"
+}

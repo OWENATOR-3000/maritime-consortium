@@ -1,0 +1,17 @@
+name: port-authority
+version: 1.0.0
+client:
+  organization: PortAuthority
+organizations:
+  PortAuthority:
+    mspid: PortAuthorityMSP
+    peers:
+      - peer0.port-authority.example.com
+peers:
+  peer0.port-authority.example.com:
+    url: grpcs://localhost:9151
+    tlsCACerts:
+      path: ../network/organizations/peerOrganizations/port-authority.example.com/tlsca/tlsca.port-authority.example.com-cert.pem
+    grpcOptions:
+      ssl-target-name-override: peer0.port-authority.example.com
+      grpc.ssl_target_name_override: peer0.port-authority.example.com

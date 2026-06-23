@@ -1,0 +1,20 @@
+Test #22: ShippingLineA proposes suspending ShippingLineB
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/governance/proposals
+Token: shippingA
+Request Body: {"proposalId":"ATTACK-SUSPEND-1","changeType":"SUSPEND_MEMBER","payload":{"targetMsp":"ShippingLineBMSP"}}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "proposalId": "ATTACK-SUSPEND-1",
+  "changeType": "SUSPEND_MEMBER",
+  "payload": {
+    "targetMsp": "ShippingLineBMSP"
+  },
+  "proposedBy": "ShippingLineAMSP",
+  "status": "OPEN",
+  "votes": {},
+  "createdAt": 1782078479
+}

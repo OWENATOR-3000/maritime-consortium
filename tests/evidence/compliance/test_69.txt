@@ -1,0 +1,21 @@
+Test #69: Regulator resolves the violation
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/shipments/SH001/compliance/V-RESOLVE-TEST/resolve
+Token: regulator
+Request Body: {"resolutionNotes":"Reviewed and confirmed within tolerance"}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "violationId": "V-RESOLVE-TEST",
+  "shipmentId": "SH001",
+  "violationType": "DOCUMENTATION_MISMATCH",
+  "details": "Manifest weight differs from declared weight",
+  "flaggedBy": "RegulatorMSP",
+  "status": "RESOLVED",
+  "flaggedAt": 1782078587,
+  "resolutionNotes": "Reviewed and confirmed within tolerance",
+  "resolvedBy": "RegulatorMSP",
+  "resolvedAt": 1782078590
+}

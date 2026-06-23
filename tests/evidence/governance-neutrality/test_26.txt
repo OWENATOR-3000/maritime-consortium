@@ -1,0 +1,12 @@
+Test #26: Suspended ShippingLineB blocked from creating a shipment
+Type: NEGATIVE
+Method: POST
+URL: http://localhost:8080/shipments
+Token: shippingB
+Request Body: {"shipmentId":"SH-ATTACK-BLOCKED","routeCode":"RT-X","cargoDescription":"should be rejected"}
+Expected Status: 403
+Actual Status: 403
+Response:
+{
+  "error": "chaincode response 500, Organization ShippingLineBMSP is not an active consortium member and may not submit this transaction."
+}

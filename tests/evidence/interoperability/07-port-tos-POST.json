@@ -1,0 +1,21 @@
+{
+  "persona": "port-tos",
+  "method": "POST",
+  "url": "/shipments/SH-INTEROP-1/clearance/approve",
+  "status": 202,
+  "response": {
+    "shipmentId": "SH-INTEROP-1",
+    "routeCode": "RT-AUTO-01",
+    "cargoDescription": "ERP-originated booking",
+    "createdBy": "ShippingLineAMSP",
+    "status": "READY_FOR_CLEARANCE",
+    "clearanceApprovals": [
+      "ShippingLineAMSP",
+      "CustomsAuthorityMSP",
+      "PortAuthorityMSP"
+    ],
+    "documentHashes": [],
+    "createdAt": 1782236751
+  },
+  "timestamp": "2026-06-23T17:46:03.220Z"
+}

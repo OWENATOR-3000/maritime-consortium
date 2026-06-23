@@ -1,0 +1,22 @@
+{
+  "persona": "customs-system",
+  "method": "POST",
+  "url": "/documents/upload",
+  "body": {
+    "shipmentId": "SH-INTEROP-1",
+    "documentId": "DOC-INTEROP-1",
+    "documentName": "customs-auto-check.txt",
+    "content": "QXV0b21hdGVkIGN1c3RvbXMgY29tcGxpYW5jZSBjaGVjazogUEFTU0VE"
+  },
+  "status": 202,
+  "response": {
+    "documentId": "DOC-INTEROP-1",
+    "shipmentId": "SH-INTEROP-1",
+    "documentName": "customs-auto-check.txt",
+    "hashValue": "deae53fdef4bd0fe0f9e447819d167c6a21eed88271d216614d458dfccad1910",
+    "anchoredBy": "CustomsAuthorityMSP",
+    "anchoredAt": 1782236758,
+    "offChainPath": "/storage/documents/DOC-INTEROP-1"
+  },
+  "timestamp": "2026-06-23T17:46:00.485Z"
+}

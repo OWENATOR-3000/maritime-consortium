@@ -1,0 +1,19 @@
+Test #33: Create SH-ATTACK-FORGE for tamper test
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/shipments
+Token: shippingA
+Request Body: {"shipmentId":"SH-ATTACK-FORGE","routeCode":"RT-X","cargoDescription":"tamper test"}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "shipmentId": "SH-ATTACK-FORGE",
+  "routeCode": "RT-X",
+  "cargoDescription": "tamper test",
+  "createdBy": "ShippingLineAMSP",
+  "status": "CREATED",
+  "clearanceApprovals": [],
+  "documentHashes": [],
+  "createdAt": 1782078504
+}

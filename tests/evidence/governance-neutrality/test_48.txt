@@ -1,0 +1,24 @@
+Test #48: CustomsAuthority votes YES to admit (2/3)
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/governance/proposals/ATTACK-ADDMEMBER-1/vote
+Token: customs
+Request Body: {"choice":"YES"}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "proposalId": "ATTACK-ADDMEMBER-1",
+  "changeType": "ADD_MEMBER",
+  "payload": {
+    "targetMsp": "ShippingLineCMSP",
+    "organisationName": "Shipping Line C"
+  },
+  "proposedBy": "ShippingLineAMSP",
+  "status": "OPEN",
+  "votes": {
+    "ShippingLineAMSP": "YES",
+    "CustomsAuthorityMSP": "YES"
+  },
+  "createdAt": 1782078533
+}

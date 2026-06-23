@@ -1,0 +1,12 @@
+Test #21: ShippingLineB attempts to write competitor's commercial details
+Type: NEGATIVE
+Method: POST
+URL: http://localhost:8080/shipments/SH001/commercial-details
+Token: shippingB
+Request Body: {"commercialDetails":{"contractValue":"$1","insuranceRef":"FAKE","clientName":"Attacker"}}
+Expected Status: 403
+Actual Status: 403
+Response:
+{
+  "error": "chaincode response 500, Only Shipping Line A may store the protected commercial dataset in this prototype."
+}

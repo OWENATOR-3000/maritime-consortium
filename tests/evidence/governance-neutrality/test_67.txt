@@ -1,0 +1,31 @@
+Test #67: ShippingLineB votes YES — quorum reached (4/4), rule reverted to 3
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/governance/proposals/ATTACK-THRESHOLD-REVERT-1/vote
+Token: shippingB
+Request Body: {"choice":"YES"}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "proposalId": "ATTACK-THRESHOLD-REVERT-1",
+  "changeType": "CHANGE_CLEARANCE_THRESHOLD",
+  "payload": {
+    "requiredApprovers": [
+      "ShippingLineAMSP",
+      "CustomsAuthorityMSP",
+      "PortAuthorityMSP"
+    ]
+  },
+  "proposedBy": "ShippingLineAMSP",
+  "status": "APPROVED",
+  "votes": {
+    "ShippingLineAMSP": "YES",
+    "CustomsAuthorityMSP": "YES",
+    "PortAuthorityMSP": "YES",
+    "ShippingLineBMSP": "YES"
+  },
+  "createdAt": 1782078574,
+  "approvedAt": 1782078584,
+  "requiredVotes": 4
+}

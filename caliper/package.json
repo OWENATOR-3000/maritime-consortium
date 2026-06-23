@@ -1,0 +1,14 @@
+{
+  "name": "maritime-caliper-benchmarks",
+  "version": "1.0.0",
+  "description": "Hyperledger Caliper benchmarking workspace for the Maritime Consortium prototype (Chapter 6 - Figures 6.8/6.9, Table 6.1)",
+  "scripts": {
+    "bind": "caliper bind --caliper-bind-sut fabric:fabric-gateway",
+    "bench": "caliper launch manager --caliper-workspace ./ --caliper-networkconfig network-config.yaml --caliper-benchconfig benchmarks/maritime.yaml"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.10.3",
+    "@hyperledger/caliper-cli": "0.6.0",
+    "@hyperledger/fabric-gateway": "^1.5.0"
+  }
+}

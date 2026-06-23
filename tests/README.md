@@ -1,27 +1,37 @@
-# Test Plan
+# Tests
 
-This directory will hold repeatable positive and negative tests for the prototype.
+## Full Test Suite
 
-The evidence requirements in the client specification make testing a first-class deliverable, not a final afterthought.
+Runs all 70 tests across governance, cargo, confidentiality, compliance, and attack scenarios:
 
-## Planned test groups
+```bash
+bash tests/run-tests.sh
+```
 
-- `governance/`
-- `confidentiality/`
-- `transparency/`
-- `validation-authority/`
-- `hybrid-compliance/`
-- `interoperability/`
+Evidence is saved to `tests/evidence/`.
 
-## Evidence targets
+## Chapter 6 Scenario Scripts
 
-Each scenario should produce evidence that can be captured in screenshots or terminal output:
+Five standalone scripts for the thesis demonstration scenarios. Each uses timestamped IDs and can be run independently without conflicting with the main suite or each other.
 
-- request submitted
-- endorsements present or missing
-- commit success or failure
-- access allowed or denied
-- hash match or mismatch
-- orderer node up or down
+| Script | Scenario | Section |
+|---|---|---|
+| `scenario-1-stakeholder-onboarding.sh` | Consortium governance onboarding, quorum voting, duplicate vote rejection | 6.3.1 |
+| `scenario-2-cargo-booking.sh` | Cargo booking, multi-org clearance, document anchoring, audit trail | 6.3.2 |
+| `scenario-3-confidentiality.sh` | Private data collection — authorised reads, ShippingLineB blocked | 6.3.3 |
+| `scenario-4-interoperability.sh` | ERP, Customs, Port TOS integration via REST API gateway | 6.3.4 |
+| `scenario-5-auditability.sh` | Audit trails, SHA-256 tamper detection, RAFT orderer fault tolerance | 6.3.5 |
 
-The final evidence pack should be traceable directly back to the validation matrix in `docs/validation-matrix.md`.
+Run any scenario:
+
+```bash
+bash tests/scenario-1-stakeholder-onboarding.sh
+```
+
+## Other Scripts
+
+| Script | Purpose |
+|---|---|
+| `fault-tolerance-test.sh` | Stops 1 / 2 RAFT orderers, verifies network behaviour |
+| `governance-smoke-test.sh` | Quick governance sanity check |
+| `external-systems-simulation.js` | Node.js simulation of ERP, Customs, Port TOS (called by scenario 4) |

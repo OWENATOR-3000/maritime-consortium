@@ -1,0 +1,91 @@
+Test #16: Regulator retrieves audit trail
+Type: POSITIVE
+Method: GET
+URL: http://localhost:8080/shipments/SH001/audit
+Token: regulator
+Request Body: none
+Expected Status: 200
+Actual Status: 200
+Response:
+[
+  {
+    "shipmentId": "SH001",
+    "eventId": "35bf5c1a4e37378fa38ca5394a41f800a93fba3e3635c3738b833504416c109c",
+    "eventType": "CLEARANCE_APPROVED",
+    "submittedBy": "CustomsAuthorityMSP",
+    "timestamp": 1782078456,
+    "txId": "35bf5c1a4e37378fa38ca5394a41f800a93fba3e3635c3738b833504416c109c",
+    "payload": {
+      "approverMsp": "CustomsAuthorityMSP",
+      "approvals": [
+        "ShippingLineAMSP",
+        "CustomsAuthorityMSP"
+      ]
+    }
+  },
+  {
+    "shipmentId": "SH001",
+    "eventId": "4373d7e3fe6f959e2443809d77a7fc12eae94bc2ceec1fa3c2d5ebece780a3a1",
+    "eventType": "SHIPMENT_CREATED",
+    "submittedBy": "ShippingLineAMSP",
+    "timestamp": 1782078451,
+    "txId": "4373d7e3fe6f959e2443809d77a7fc12eae94bc2ceec1fa3c2d5ebece780a3a1",
+    "payload": {
+      "routeCode": "RT-EAST-01",
+      "createdBy": "ShippingLineAMSP"
+    }
+  },
+  {
+    "shipmentId": "SH001",
+    "eventId": "860fed4f3899edc78ab54e22f566b3a4b89e71f19b00d6a8393ecacf71663bcd",
+    "eventType": "CLEARANCE_APPROVED",
+    "submittedBy": "ShippingLineAMSP",
+    "timestamp": 1782078454,
+    "txId": "860fed4f3899edc78ab54e22f566b3a4b89e71f19b00d6a8393ecacf71663bcd",
+    "payload": {
+      "approverMsp": "ShippingLineAMSP",
+      "approvals": [
+        "ShippingLineAMSP"
+      ]
+    }
+  },
+  {
+    "shipmentId": "SH001",
+    "eventId": "a79616a3dcfd3b306baa6613e5b120ceaf7049eb16f40d4f2179756e2ed85242",
+    "eventType": "CLEARANCE_APPROVED",
+    "submittedBy": "PortAuthorityMSP",
+    "timestamp": 1782078459,
+    "txId": "a79616a3dcfd3b306baa6613e5b120ceaf7049eb16f40d4f2179756e2ed85242",
+    "payload": {
+      "approverMsp": "PortAuthorityMSP",
+      "approvals": [
+        "ShippingLineAMSP",
+        "CustomsAuthorityMSP",
+        "PortAuthorityMSP"
+      ]
+    }
+  },
+  {
+    "shipmentId": "SH001",
+    "eventId": "af239e2eb0ea9ea03e4e606421469ca2075dcf1e734607104d2c5fd792a13742",
+    "eventType": "COMMERCIAL_DETAILS_SUBMITTED",
+    "submittedBy": "ShippingLineAMSP",
+    "timestamp": 1782078469,
+    "txId": "af239e2eb0ea9ea03e4e606421469ca2075dcf1e734607104d2c5fd792a13742",
+    "payload": {
+      "ownerMsp": "ShippingLineAMSP",
+      "privateDataHash": "d6d873493a375019ac2e31f921f47f6e33eb74555ed71d857744765442d22439"
+    }
+  },
+  {
+    "shipmentId": "SH001",
+    "eventId": "faac9b97b801abe83b330b3d665cba6ae856397de5f76a8c19bf30c8d86a56c3",
+    "eventType": "CLEARANCE_FINALIZED",
+    "submittedBy": "ShippingLineAMSP",
+    "timestamp": 1782078461,
+    "txId": "faac9b97b801abe83b330b3d665cba6ae856397de5f76a8c19bf30c8d86a56c3",
+    "payload": {
+      "finalizedBy": "ShippingLineAMSP"
+    }
+  }
+]

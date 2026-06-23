@@ -45,6 +45,9 @@
     .dh-transparency { background: var(--teal); color: white; }
     .dh-compliance { background: var(--purple); color: white; }
     .dh-interop { background: var(--green); color: white; }
+    .dh-voting { background: #4a2a7a; color: white; }
+    .dh-compliance2 { background: #8a4b08; color: white; }
+    .dh-dispute { background: #1f6f5c; color: white; }
 
     /* Action rows */
     .action-row { border-bottom: 1px solid #eee; padding: .9rem 1.1rem; }
@@ -218,6 +221,72 @@
     </div>
   </div>
 
+  <!-- Domain 7: Consortium Governance — Voting & Membership -->
+  <div class="domain-card card">
+    <div class="domain-header dh-voting"><i class="bi bi-bank2 me-2"></i>7 · Consortium Governance — Voting &amp; Membership</div>
+    <div class="card-body p-0">
+
+      <div class="action-row">
+        <div class="action-label">Propose a governance change <span class="badge ms-1" style="background:#4a2a7a">POST /governance/proposals</span></div>
+        <div class="action-desc">Submitted as the currently active identity selected above. Caller must be an active member.</div>
+        <div class="row g-2 mb-2">
+          <div class="col-6"><input id="gov-pid" class="form-control form-control-sm" value="PROP-TEST-1" placeholder="Proposal ID"/></div>
+          <div class="col-6">
+            <select id="gov-type" class="form-select form-select-sm" onchange="renderGovTarget()">
+              <option value="SUSPEND_MEMBER">Suspend member</option>
+              <option value="REINSTATE_MEMBER">Reinstate member</option>
+              <option value="REVOKE_MEMBER">Revoke member</option>
+              <option value="ADD_MEMBER">Admit new member</option>
+              <option value="CHANGE_CLEARANCE_THRESHOLD">Change clearance rule</option>
+            </select>
+          </div>
+        </div>
+        <div id="gov-target-fields" class="mb-2"></div>
+        <button class="btn btn-sm btn-run" style="background:#4a2a7a;color:white" onclick="run('gov-propose')"><i class="bi bi-play-fill me-1"></i>Run</button>
+        <div id="resp-gov-propose" class="response-box"></div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-label">Vote on a proposal <span class="badge ms-1" style="background:#4a2a7a">POST /governance/proposals/:id/vote</span></div>
+        <div class="action-desc">Cast as the currently active identity. Switch identity above between votes to simulate multiple organisations voting.</div>
+        <div class="d-flex gap-2 mb-2">
+          <input id="gov-vote-pid" class="form-control form-control-sm" style="max-width:160px" value="PROP-TEST-1" placeholder="Proposal ID"/>
+          <button class="btn btn-sm btn-success btn-run" onclick="run('gov-vote-yes')">Vote YES</button>
+          <button class="btn btn-sm btn-outline-danger btn-run" onclick="run('gov-vote-no')">Vote NO</button>
+        </div>
+        <div id="resp-gov-vote" class="response-box"></div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-label">List all proposals <span class="badge bg-secondary ms-1">GET /governance/proposals</span></div>
+        <button class="btn btn-sm btn-secondary btn-run" onclick="run('gov-list-proposals')"><i class="bi bi-play-fill me-1"></i>Run</button>
+        <div id="resp-gov-list-proposals" class="response-box"></div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-label">List membership roster <span class="badge bg-secondary ms-1">GET /governance/members</span></div>
+        <div class="action-desc">Shows status — ACTIVE, PENDING, SUSPENDED, or REVOKED — for every known organisation.</div>
+        <button class="btn btn-sm btn-secondary btn-run" onclick="run('gov-list-members')"><i class="bi bi-play-fill me-1"></i>Run</button>
+        <div id="resp-gov-list-members" class="response-box"></div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-label">Governance audit trail <span class="badge ms-1" style="background:#117a8b">GET /governance/audit</span></div>
+        <div class="action-desc">Immutable history of every proposal, vote, and outcome.</div>
+        <button class="btn btn-sm btn-run" style="background:#117a8b;color:white" onclick="run('gov-audit')"><i class="bi bi-play-fill me-1"></i>Run</button>
+        <div id="resp-gov-audit" class="response-box"></div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-label">Suspended-member enforcement <span class="badge bg-danger ms-1">Expected 403 once suspended</span></div>
+        <div class="action-desc">Attempts to create a shipment as the currently active identity. Suspend that identity's org via a proposal above first, then run this to see the chaincode itself reject the transaction.</div>
+        <button class="btn btn-sm btn-danger btn-run" onclick="run('gov-test-blocked')"><i class="bi bi-play-fill me-1"></i>Run (uses active identity)</button>
+        <div id="resp-gov-test-blocked" class="response-box"></div>
+      </div>
+
+    </div>
+  </div>
+
 </div><!-- end left col -->
 
 <!-- RIGHT COLUMN -->
@@ -313,6 +382,80 @@
     </div>
   </div>
 
+  <!-- Domain 8: Compliance Enforcement -->
+  <div class="domain-card card">
+    <div class="domain-header dh-compliance2"><i class="bi bi-clipboard-check me-2"></i>8 · Compliance Enforcement</div>
+    <div class="card-body p-0">
+
+      <div class="action-row">
+        <div class="action-label">Flag a violation <span class="badge ms-1" style="background:#8a4b08">POST /compliance/flag</span></div>
+        <div class="action-desc">Regulator-only. Uses the shared Shipment ID above.</div>
+        <div class="row g-2 mb-2">
+          <div class="col-5"><input id="violation-id" class="form-control form-control-sm" value="V001" placeholder="Violation ID"/></div>
+          <div class="col-7"><input id="violation-type" class="form-control form-control-sm" value="LATE_FILING" placeholder="Violation type"/></div>
+        </div>
+        <input id="violation-details" class="form-control form-control-sm mb-2" value="Filed 3 days late" placeholder="Details"/>
+        <button class="btn btn-sm btn-run" style="background:#8a4b08;color:white" onclick="run('compliance-flag')"><i class="bi bi-play-fill me-1"></i>Run (forces regulator)</button>
+        <div id="resp-compliance-flag" class="response-box"></div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-label">List violations <span class="badge bg-secondary ms-1">GET /shipments/:id/compliance</span></div>
+        <button class="btn btn-sm btn-secondary btn-run" onclick="run('compliance-list')"><i class="bi bi-play-fill me-1"></i>Run</button>
+        <div id="resp-compliance-list" class="response-box"></div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-label">Resolve violation <span class="badge ms-1" style="background:#8a4b08">POST /compliance/:id/resolve</span></div>
+        <div class="action-desc">Regulator-only. Resolves the Violation ID entered above.</div>
+        <input id="violation-resolution" class="form-control form-control-sm mb-2" value="Penalty waived after review" placeholder="Resolution notes"/>
+        <button class="btn btn-sm btn-run" style="background:#8a4b08;color:white" onclick="run('compliance-resolve')"><i class="bi bi-play-fill me-1"></i>Run (forces regulator)</button>
+        <div id="resp-compliance-resolve" class="response-box"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Domain 9: Dispute Resolution -->
+  <div class="domain-card card">
+    <div class="domain-header dh-dispute"><i class="bi bi-people me-2"></i>9 · Dispute Resolution</div>
+    <div class="card-body p-0">
+
+      <div class="action-row">
+        <div class="action-label">Raise a dispute <span class="badge ms-1" style="background:#1f6f5c">POST /disputes</span></div>
+        <div class="action-desc">Any active member, using the currently selected identity above.</div>
+        <div class="row g-2 mb-2">
+          <div class="col-5"><input id="dispute-id" class="form-control form-control-sm" value="D001" placeholder="Dispute ID"/></div>
+          <div class="col-7"><input id="dispute-reason" class="form-control form-control-sm" value="Cargo weight mismatch" placeholder="Reason"/></div>
+        </div>
+        <button class="btn btn-sm btn-run" style="background:#1f6f5c;color:white" onclick="run('dispute-raise')"><i class="bi bi-play-fill me-1"></i>Run</button>
+        <div id="resp-dispute-raise" class="response-box"></div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-label">Respond to dispute <span class="badge ms-1" style="background:#1f6f5c">POST /disputes/:id/respond</span></div>
+        <input id="dispute-response" class="form-control form-control-sm mb-2" value="Weight confirmed correct per manifest" placeholder="Response"/>
+        <button class="btn btn-sm btn-run" style="background:#1f6f5c;color:white" onclick="run('dispute-respond')"><i class="bi bi-play-fill me-1"></i>Run (current identity)</button>
+        <div id="resp-dispute-respond" class="response-box"></div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-label">Resolve dispute <span class="badge ms-1" style="background:#1f6f5c">POST /disputes/:id/resolve</span></div>
+        <div class="action-desc">Regulator-only — the neutral arbiter.</div>
+        <input id="dispute-resolution" class="form-control form-control-sm mb-2" value="Manifest takes precedence; no penalty" placeholder="Resolution"/>
+        <button class="btn btn-sm btn-run" style="background:#1f6f5c;color:white" onclick="run('dispute-resolve')"><i class="bi bi-play-fill me-1"></i>Run (forces regulator)</button>
+        <div id="resp-dispute-resolve" class="response-box"></div>
+      </div>
+
+      <div class="action-row">
+        <div class="action-label">List disputes <span class="badge bg-secondary ms-1">GET /shipments/:id/disputes</span></div>
+        <button class="btn btn-sm btn-secondary btn-run" onclick="run('dispute-list')"><i class="bi bi-play-fill me-1"></i>Run</button>
+        <div id="resp-dispute-list" class="response-box"></div>
+      </div>
+
+    </div>
+  </div>
+
 </div><!-- end right col -->
 </div><!-- end row -->
 </div><!-- end container -->
@@ -342,6 +485,40 @@ function setId(id, btn) {
   document.getElementById('tamper-did').textContent = getDid();
 }
 
+// ── Governance helpers ────────────────────────────────────────────────────
+const ALL_MSPS = [
+  ['ShippingLineAMSP', 'Shipping Line A'],
+  ['ShippingLineBMSP', 'Shipping Line B'],
+  ['PortAuthorityMSP', 'Port Authority'],
+  ['CustomsAuthorityMSP', 'Customs Authority'],
+  ['RegulatorMSP', 'Regulator'],
+];
+
+function renderGovTarget() {
+  const type = document.getElementById('gov-type').value;
+  const box = document.getElementById('gov-target-fields');
+
+  if (type === 'CHANGE_CLEARANCE_THRESHOLD') {
+    box.innerHTML = ALL_MSPS.map(([id, label]) => `
+      <div class="form-check form-check-inline">
+        <input class="form-check-input gov-cb" type="checkbox" value="${id}" id="gcb-${id}"
+          ${['ShippingLineAMSP','CustomsAuthorityMSP','PortAuthorityMSP'].includes(id) ? 'checked' : ''}>
+        <label class="form-check-label small" for="gcb-${id}">${label}</label>
+      </div>`).join('');
+  } else if (type === 'ADD_MEMBER') {
+    box.innerHTML = `
+      <div class="row g-2">
+        <div class="col-6"><input id="gov-target" class="form-control form-control-sm" placeholder="Candidate MSP ID, e.g. ShippingLineCMSP"/></div>
+        <div class="col-6"><input id="gov-orgname" class="form-control form-control-sm" placeholder="Organisation name"/></div>
+      </div>`;
+  } else {
+    box.innerHTML = `
+      <select id="gov-target" class="form-select form-select-sm">
+        ${ALL_MSPS.map(([id, label]) => `<option value="${id}" ${id==='ShippingLineBMSP'?'selected':''}>${label} (${id})</option>`).join('')}
+      </select>`;
+  }
+}
+
 document.getElementById('global-did').addEventListener('input', () => {
   document.getElementById('tamper-did').textContent = getDid();
 });
@@ -360,6 +537,7 @@ async function checkHealth() {
   }
 }
 checkHealth();
+renderGovTarget();
 
 function syntaxHL(json) {
   return json
@@ -449,6 +627,68 @@ async function run(action) {
       await apiCall('verify-doc', 'POST', `/documents/${did}/verify`); break;
     case 'verify-tampered':
       await apiCall('verify-tampered', 'POST', `/documents/${did}/verify`); break;
+
+    case 'gov-propose': {
+      const proposalId = document.getElementById('gov-pid').value.trim();
+      const changeType = document.getElementById('gov-type').value;
+      let payload = {};
+      if (changeType === 'CHANGE_CLEARANCE_THRESHOLD') {
+        payload = { requiredApprovers: Array.from(document.querySelectorAll('.gov-cb:checked')).map(cb => cb.value) };
+      } else if (changeType === 'ADD_MEMBER') {
+        payload = {
+          targetMsp: document.getElementById('gov-target').value.trim(),
+          organisationName: document.getElementById('gov-orgname').value.trim()
+        };
+      } else {
+        payload = { targetMsp: document.getElementById('gov-target').value };
+      }
+      await apiCall('gov-propose', 'POST', '/governance/proposals', { proposalId, changeType, payload });
+      document.getElementById('gov-vote-pid').value = proposalId;
+      break;
+    }
+    case 'gov-vote-yes':
+      await apiCall('gov-vote', 'POST', `/governance/proposals/${document.getElementById('gov-vote-pid').value.trim()}/vote`, { choice: 'YES' }); break;
+    case 'gov-vote-no':
+      await apiCall('gov-vote', 'POST', `/governance/proposals/${document.getElementById('gov-vote-pid').value.trim()}/vote`, { choice: 'NO' }); break;
+    case 'gov-list-proposals':
+      await apiCall('gov-list-proposals', 'GET', '/governance/proposals'); break;
+    case 'gov-list-members':
+      await apiCall('gov-list-members', 'GET', '/governance/members'); break;
+    case 'gov-audit':
+      await apiCall('gov-audit', 'GET', '/governance/audit'); break;
+    case 'gov-test-blocked':
+      await apiCall('gov-test-blocked', 'POST', '/shipments', {
+        shipmentId: 'SH-GOV-CONSOLE-TEST', routeCode: 'RT-TEST', cargoDescription: 'governance enforcement test'
+      }); break;
+
+    case 'compliance-flag':
+      await apiCall('compliance-flag', 'POST', `/shipments/${sid}/compliance/flag`, {
+        violationId: document.getElementById('violation-id').value.trim(),
+        violationType: document.getElementById('violation-type').value.trim(),
+        details: document.getElementById('violation-details').value.trim()
+      }, 'regulator'); break;
+    case 'compliance-list':
+      await apiCall('compliance-list', 'GET', `/shipments/${sid}/compliance`); break;
+    case 'compliance-resolve':
+      await apiCall('compliance-resolve', 'POST',
+        `/shipments/${sid}/compliance/${document.getElementById('violation-id').value.trim()}/resolve`,
+        { resolutionNotes: document.getElementById('violation-resolution').value.trim() }, 'regulator'); break;
+
+    case 'dispute-raise':
+      await apiCall('dispute-raise', 'POST', `/shipments/${sid}/disputes`, {
+        disputeId: document.getElementById('dispute-id').value.trim(),
+        reason: document.getElementById('dispute-reason').value.trim()
+      }); break;
+    case 'dispute-respond':
+      await apiCall('dispute-respond', 'POST',
+        `/shipments/${sid}/disputes/${document.getElementById('dispute-id').value.trim()}/respond`,
+        { response: document.getElementById('dispute-response').value.trim() }); break;
+    case 'dispute-resolve':
+      await apiCall('dispute-resolve', 'POST',
+        `/shipments/${sid}/disputes/${document.getElementById('dispute-id').value.trim()}/resolve`,
+        { resolution: document.getElementById('dispute-resolution').value.trim() }, 'regulator'); break;
+    case 'dispute-list':
+      await apiCall('dispute-list', 'GET', `/shipments/${sid}/disputes`); break;
   }
 }
 

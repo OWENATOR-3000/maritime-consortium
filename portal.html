@@ -225,6 +225,7 @@ body{background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;min-height:100vh
     <div class="wf-tab"        id="tab-4" onclick="goTab(4)"><span class="tab-num">4</span>Finalise Clearance</div>
     <div class="wf-tab"        id="tab-5" onclick="goTab(5)"><span class="tab-num">5</span>Documents</div>
     <div class="wf-tab"        id="tab-6" onclick="goTab(6)"><span class="tab-num">6</span>Audit Trail</div>
+    <div class="wf-tab"        id="tab-7" onclick="goTab(7)"><span class="tab-num">7</span>Governance</div>
   </div>
 
   <div class="app-body">
@@ -351,6 +352,52 @@ body{background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;min-height:100vh
             <i class="bi bi-journal-text me-1"></i>Load Full Audit Trail
           </button>
           <div id="resp-6" class="response-area"></div>
+        </div>
+      </div>
+
+      <!-- TAB 7 — GOVERNANCE -->
+      <div id="pane-7" style="display:none">
+        <div class="action-header">
+          <div class="action-title">Consortium Governance</div>
+          <div class="action-subtitle">Members propose and vote on network-level decisions — admitting or suspending a participant, or changing the clearance approval rule. A proposal takes effect automatically once it reaches quorum (a majority of currently active members). Every active member, including you, may propose and vote.</div>
+        </div>
+        <div class="action-body">
+
+          <div class="state-title mb-2">Propose a Change</div>
+          <div class="field-group">
+            <label class="form-label">Proposal ID</label>
+            <input id="g-pid" class="form-control" />
+          </div>
+          <div class="field-group">
+            <label class="form-label">Change Type</label>
+            <select id="g-type" class="form-select" onchange="renderGovForm()">
+              <option value="SUSPEND_MEMBER">Suspend a member</option>
+              <option value="REINSTATE_MEMBER">Reinstate a suspended member</option>
+              <option value="REVOKE_MEMBER">Revoke a member permanently</option>
+              <option value="ADD_MEMBER">Admit a new member</option>
+              <option value="CHANGE_CLEARANCE_THRESHOLD">Change clearance approval rule</option>
+            </select>
+          </div>
+          <div id="g-fields"></div>
+          <button id="btn-propose" class="btn btn-sm-sq w-100 mb-3" style="background:#1a2744;color:white" onclick="doPropose()">
+            <i class="bi bi-megaphone me-1"></i>Submit Proposal
+          </button>
+          <div id="resp-7a" class="response-area mb-3"></div>
+
+          <hr/>
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="state-title mb-0">Open &amp; Recent Proposals</div>
+            <button class="btn btn-sm btn-outline-secondary px-2" onclick="loadProposals()" title="Refresh"><i class="bi bi-arrow-clockwise"></i></button>
+          </div>
+          <div id="proposal-list" class="mb-3"><div class="text-muted small text-center py-2">Click ↻ to load proposals</div></div>
+          <div id="resp-7b" class="response-area mb-3"></div>
+
+          <hr/>
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="state-title mb-0">Governance Audit Trail</div>
+            <button class="btn btn-sm btn-outline-secondary px-2" onclick="loadGovAudit()" title="Refresh"><i class="bi bi-arrow-clockwise"></i></button>
+          </div>
+          <div id="resp-7c" class="response-area"></div>
         </div>
       </div>
 
@@ -496,7 +543,7 @@ function can(perm) { return ROLES[role].can.includes(perm); }
 let currentTab = 1;
 function goTab(n) {
   currentTab = n;
-  for (let i = 1; i <= 6; i++) {
+  for (let i = 1; i <= 7; i++) {
     document.getElementById('pane-' + i).style.display = i === n ? '' : 'none';
     document.getElementById('tab-' + i).classList.toggle('active', i === n);
   }
@@ -626,6 +673,11 @@ function renderTab(n) {
 
   if (n === 6) {
     document.getElementById('f-audit-sid').value = sid();
+  }
+
+  if (n === 7) {
+    document.getElementById('g-pid').value = 'PROP-' + Date.now();
+    renderGovForm();
   }
 }
 
@@ -796,6 +848,135 @@ function syncSidFields(s) {
   ['f-csid','f-asid','f-fsid','f-audit-sid'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = s;
   });
+}
+
+// ── Governance ───────────────────────────────────────────────────────────
+const ALL_MSPS = [
+  ['ShippingLineAMSP', 'Shipping Line A'],
+  ['ShippingLineBMSP', 'Shipping Line B'],
+  ['PortAuthorityMSP', 'Port Authority'],
+  ['CustomsAuthorityMSP', 'Customs Authority'],
+  ['RegulatorMSP', 'Regulator'],
+];
+
+function mspOptions(selected) {
+  return ALL_MSPS.map(([id, label]) =>
+    `<option value="${id}" ${id === selected ? 'selected' : ''}>${label} (${id})</option>`).join('');
+}
+
+function renderGovForm() {
+  const type = document.getElementById('g-type').value;
+  const box = document.getElementById('g-fields');
+
+  if (type === 'CHANGE_CLEARANCE_THRESHOLD') {
+    box.innerHTML = `
+      <div class="field-group">
+        <label class="form-label">New Required Approvers</label>
+        <div class="form-hint mb-2">Check every organisation that must approve clearance going forward. Replaces the current rule entirely once this proposal reaches quorum.</div>
+        ${ALL_MSPS.map(([id, label]) => `
+          <div class="form-check">
+            <input class="form-check-input gov-approver-cb" type="checkbox" value="${id}" id="cb-${id}" ${['ShippingLineAMSP','CustomsAuthorityMSP','PortAuthorityMSP'].includes(id) ? 'checked' : ''}>
+            <label class="form-check-label" for="cb-${id}" style="font-size:.85rem">${label}</label>
+          </div>`).join('')}
+      </div>`;
+  } else if (type === 'ADD_MEMBER') {
+    box.innerHTML = `
+      <div class="field-group">
+        <label class="form-label">Candidate Organisation MSP ID</label>
+        <input id="g-target" class="form-control" placeholder="e.g. ShippingLineCMSP" />
+        <div class="form-hint">A new identity not already in the consortium — this prototype demonstrates the onboarding workflow at the application layer; physically adding a Fabric peer/MSP is a separate infrastructure step.</div>
+      </div>
+      <div class="field-group">
+        <label class="form-label">Organisation Name</label>
+        <input id="g-orgname" class="form-control" placeholder="e.g. Shipping Line C" />
+      </div>`;
+  } else {
+    box.innerHTML = `
+      <div class="field-group">
+        <label class="form-label">Target Organisation</label>
+        <select id="g-target" class="form-select">${mspOptions('ShippingLineBMSP')}</select>
+      </div>`;
+  }
+}
+
+async function doPropose() {
+  const proposalId = v('g-pid');
+  const changeType = document.getElementById('g-type').value;
+  if (!proposalId) { alert('Enter a Proposal ID.'); return; }
+
+  let payload = {};
+  if (changeType === 'CHANGE_CLEARANCE_THRESHOLD') {
+    const checked = Array.from(document.querySelectorAll('.gov-approver-cb:checked')).map(cb => cb.value);
+    if (checked.length === 0) { alert('Select at least one required approver.'); return; }
+    payload = { requiredApprovers: checked };
+  } else if (changeType === 'ADD_MEMBER') {
+    const target = v('g-target'), orgName = v('g-orgname');
+    if (!target || !orgName) { alert('Fill in candidate MSP ID and organisation name.'); return; }
+    payload = { targetMsp: target, organisationName: orgName };
+  } else {
+    const target = v('g-target');
+    if (!target) { alert('Select a target organisation.'); return; }
+    payload = { targetMsp: target };
+  }
+
+  setLoading('btn-propose', 'Submitting…');
+  const { status, data } = await api('POST', '/governance/proposals', { proposalId, changeType, payload });
+  showResp('7a', status, data);
+  resetBtn('btn-propose', `<i class="bi bi-megaphone me-1"></i>Submit Proposal`);
+  if (status === 202) {
+    document.getElementById('g-pid').value = 'PROP-' + Date.now();
+    loadProposals();
+  }
+}
+
+async function loadProposals() {
+  const list = document.getElementById('proposal-list');
+  list.innerHTML = `<div class="text-muted small text-center py-2">Loading…</div>`;
+  const { status, data } = await api('GET', '/governance/proposals');
+  if (status !== 200 || !Array.isArray(data)) {
+    list.innerHTML = `<div class="text-muted small text-center py-2">Could not load proposals</div>`;
+    return;
+  }
+  if (data.length === 0) {
+    list.innerHTML = `<div class="text-muted small text-center py-2">No proposals yet</div>`;
+    return;
+  }
+  // Most recent first
+  const sorted = [...data].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  list.innerHTML = sorted.map(p => {
+    const votes = p.votes || {};
+    const voteRows = Object.entries(votes).map(([msp, choice]) =>
+      `<span class="badge ${choice === 'YES' ? 'bg-success' : 'bg-secondary'} me-1">${msp.replace('MSP','')}: ${choice}</span>`).join('');
+    const alreadyVoted = role && votes[ROLES[role].msp];
+    const canVote = p.status === 'OPEN' && !alreadyVoted;
+    return `
+      <div class="state-card mb-2" style="padding:.9rem 1rem">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="fw-bold" style="font-size:.85rem">${p.proposalId}</div>
+            <div class="text-muted" style="font-size:.74rem">${p.changeType} · proposed by ${p.proposedBy}</div>
+          </div>
+          <span class="status-chip ${p.status === 'APPROVED' ? 'chip-cleared' : 'chip-pending'}">${p.status}</span>
+        </div>
+        <div class="mt-2" style="font-size:.74rem">${voteRows || '<span class="text-muted">No votes yet</span>'}</div>
+        ${canVote ? `
+          <div class="mt-2 d-flex gap-2">
+            <button class="btn btn-sm btn-success flex-grow-1" onclick="voteProposal('${p.proposalId}','YES')">Vote YES</button>
+            <button class="btn btn-sm btn-outline-danger flex-grow-1" onclick="voteProposal('${p.proposalId}','NO')">Vote NO</button>
+          </div>` : alreadyVoted ? `<div class="text-muted mt-2" style="font-size:.74rem">You already voted: ${votes[ROLES[role].msp]}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+async function voteProposal(proposalId, choice) {
+  const { status, data } = await api('POST', `/governance/proposals/${proposalId}/vote`, { choice });
+  showResp('7b', status, data);
+  if (status === 202) loadProposals();
+}
+
+async function loadGovAudit() {
+  const { status, data } = await api('GET', '/governance/audit');
+  showResp('7c', status, data);
 }
 </script>
 </body>

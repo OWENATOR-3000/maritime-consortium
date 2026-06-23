@@ -1,0 +1,24 @@
+Test #63: Propose reverting clearance rule back to the original 3 approvers
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/governance/proposals
+Token: shippingA
+Request Body: {"proposalId":"ATTACK-THRESHOLD-REVERT-1","changeType":"CHANGE_CLEARANCE_THRESHOLD","payload":{"requiredApprovers":["ShippingLineAMSP","CustomsAuthorityMSP","PortAuthorityMSP"]}}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "proposalId": "ATTACK-THRESHOLD-REVERT-1",
+  "changeType": "CHANGE_CLEARANCE_THRESHOLD",
+  "payload": {
+    "requiredApprovers": [
+      "ShippingLineAMSP",
+      "CustomsAuthorityMSP",
+      "PortAuthorityMSP"
+    ]
+  },
+  "proposedBy": "ShippingLineAMSP",
+  "status": "OPEN",
+  "votes": {},
+  "createdAt": 1782078574
+}

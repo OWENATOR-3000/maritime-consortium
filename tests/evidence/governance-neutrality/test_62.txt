@@ -1,0 +1,25 @@
+Test #62: Finalize succeeds once all 4 required approvers are in
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/shipments/SH-ATTACK-4APPROVER/clearance/finalize
+Token: shippingA
+Request Body: none
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "shipmentId": "SH-ATTACK-4APPROVER",
+  "routeCode": "RT-X",
+  "cargoDescription": "4-approver rule test",
+  "createdBy": "ShippingLineAMSP",
+  "status": "CLEARED",
+  "clearanceApprovals": [
+    "ShippingLineAMSP",
+    "CustomsAuthorityMSP",
+    "PortAuthorityMSP",
+    "RegulatorMSP"
+  ],
+  "documentHashes": [],
+  "createdAt": 1782078559,
+  "clearedAt": 1782078571
+}

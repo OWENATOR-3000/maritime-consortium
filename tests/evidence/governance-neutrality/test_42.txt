@@ -1,0 +1,20 @@
+Test #42: Propose reinstating ShippingLineB (cleanup)
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/governance/proposals
+Token: customs
+Request Body: {"proposalId":"ATTACK-CLEANUP-1","changeType":"REINSTATE_MEMBER","payload":{"targetMsp":"ShippingLineBMSP"}}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "proposalId": "ATTACK-CLEANUP-1",
+  "changeType": "REINSTATE_MEMBER",
+  "payload": {
+    "targetMsp": "ShippingLineBMSP"
+  },
+  "proposedBy": "CustomsAuthorityMSP",
+  "status": "OPEN",
+  "votes": {},
+  "createdAt": 1782078522
+}

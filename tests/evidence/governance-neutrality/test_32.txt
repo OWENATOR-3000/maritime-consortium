@@ -1,0 +1,19 @@
+Test #32: Reinstated ShippingLineB can create a shipment again
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/shipments
+Token: shippingB
+Request Body: {"shipmentId":"SH-ATTACK-REINSTATED","routeCode":"RT-X","cargoDescription":"should succeed"}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "shipmentId": "SH-ATTACK-REINSTATED",
+  "routeCode": "RT-X",
+  "cargoDescription": "should succeed",
+  "createdBy": "ShippingLineBMSP",
+  "status": "CREATED",
+  "clearanceApprovals": [],
+  "documentHashes": [],
+  "createdAt": 1782078502
+}

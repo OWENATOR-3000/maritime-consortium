@@ -1,0 +1,56 @@
+# Benchmark configuration for the Maritime Consortium prototype.
+# Produces the data behind Table 6.1 and Figure 6.9 (Chapter 6).
+test:
+  name: maritime-consortium-benchmark
+  description: >
+    Caliper evaluation of the Maritime Consortium Blockchain Framework:
+    seven transaction types across a five-organisation Fabric 2.5 network
+    with RAFT consensus (three orderers).
+  workers:
+    number: 2
+  rounds:
+    - label: CreateShipment
+      txDuration: 60
+      rateControl: { type: fixed-rate, opts: { tps: 50 } }
+      workload:
+        module: workload/createShipment.js
+
+    - label: SubmitCommercialDetails
+      txNumber: 300
+      rateControl: { type: fixed-rate, opts: { tps: 30 } }
+      workload:
+        module: workload/submitCommercialDetails.js
+        arguments: { preCreate: 150 }   # per worker
+
+    - label: ApproveClearance
+      txNumber: 300
+      rateControl: { type: fixed-rate, opts: { tps: 45 } }
+      workload:
+        module: workload/approveClearance.js
+        arguments: { preCreate: 150 }
+
+    - label: FinalizeClearance
+      txNumber: 200
+      rateControl: { type: fixed-rate, opts: { tps: 45 } }
+      workload:
+        module: workload/finalizeClearance.js
+        arguments: { preCreate: 100 }
+
+    - label: RecordDocumentHash
+      txNumber: 300
+      rateControl: { type: fixed-rate, opts: { tps: 45 } }
+      workload:
+        module: workload/recordDocumentHash.js
+        arguments: { preCreate: 150 }
+
+    - label: GetShipment
+      txDuration: 60
+      rateControl: { type: fixed-rate, opts: { tps: 100 } }
+      workload:
+        module: workload/getShipment.js
+
+    - label: GetCommercialDetails
+      txDuration: 60
+      rateControl: { type: fixed-rate, opts: { tps: 90 } }
+      workload:
+        module: workload/getCommercialDetails.js

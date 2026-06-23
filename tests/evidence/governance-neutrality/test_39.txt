@@ -1,0 +1,26 @@
+Test #39: PortAuthority votes YES to revoke — quorum reached (3/3)
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/governance/proposals/ATTACK-REVOKE-1/vote
+Token: port
+Request Body: {"choice":"YES"}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "proposalId": "ATTACK-REVOKE-1",
+  "changeType": "REVOKE_MEMBER",
+  "payload": {
+    "targetMsp": "ShippingLineBMSP"
+  },
+  "proposedBy": "ShippingLineAMSP",
+  "status": "APPROVED",
+  "votes": {
+    "ShippingLineAMSP": "YES",
+    "CustomsAuthorityMSP": "YES",
+    "PortAuthorityMSP": "YES"
+  },
+  "createdAt": 1782078510,
+  "approvedAt": 1782078518,
+  "requiredVotes": 3
+}

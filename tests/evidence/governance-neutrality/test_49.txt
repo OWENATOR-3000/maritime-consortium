@@ -1,0 +1,27 @@
+Test #49: PortAuthority votes YES to admit — quorum reached (3/3)
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/governance/proposals/ATTACK-ADDMEMBER-1/vote
+Token: port
+Request Body: {"choice":"YES"}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "proposalId": "ATTACK-ADDMEMBER-1",
+  "changeType": "ADD_MEMBER",
+  "payload": {
+    "targetMsp": "ShippingLineCMSP",
+    "organisationName": "Shipping Line C"
+  },
+  "proposedBy": "ShippingLineAMSP",
+  "status": "APPROVED",
+  "votes": {
+    "ShippingLineAMSP": "YES",
+    "CustomsAuthorityMSP": "YES",
+    "PortAuthorityMSP": "YES"
+  },
+  "createdAt": 1782078533,
+  "approvedAt": 1782078540,
+  "requiredVotes": 3
+}

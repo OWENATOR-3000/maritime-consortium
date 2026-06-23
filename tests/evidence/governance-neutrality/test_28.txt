@@ -1,0 +1,12 @@
+Test #28: Suspended ShippingLineB cannot vote on its own reinstatement
+Type: NEGATIVE
+Method: POST
+URL: http://localhost:8080/governance/proposals/ATTACK-REINSTATE-1/vote
+Token: shippingB
+Request Body: {"choice":"YES"}
+Expected Status: 403
+Actual Status: 403
+Response:
+{
+  "error": "chaincode response 500, Organization ShippingLineBMSP is not an active consortium member and may not submit this transaction."
+}

@@ -1,0 +1,23 @@
+Test #38: CustomsAuthority votes YES to revoke (2/3)
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/governance/proposals/ATTACK-REVOKE-1/vote
+Token: customs
+Request Body: {"choice":"YES"}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "proposalId": "ATTACK-REVOKE-1",
+  "changeType": "REVOKE_MEMBER",
+  "payload": {
+    "targetMsp": "ShippingLineBMSP"
+  },
+  "proposedBy": "ShippingLineAMSP",
+  "status": "OPEN",
+  "votes": {
+    "ShippingLineAMSP": "YES",
+    "CustomsAuthorityMSP": "YES"
+  },
+  "createdAt": 1782078510
+}

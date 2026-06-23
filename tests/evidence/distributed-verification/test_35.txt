@@ -1,0 +1,12 @@
+Test #35: Finalize with forged extra-approvals in body still rejected
+Type: NEGATIVE
+Method: POST
+URL: http://localhost:8080/shipments/SH-ATTACK-FORGE/clearance/finalize
+Token: shippingA
+Request Body: {"clearanceApprovals":["ShippingLineAMSP","CustomsAuthorityMSP","PortAuthorityMSP"],"status":"CLEARED"}
+Expected Status: 400
+Actual Status: 400
+Response:
+{
+  "error": "chaincode response 500, Shipment clearance cannot be finalized. Missing approvals: CustomsAuthorityMSP, PortAuthorityMSP"
+}

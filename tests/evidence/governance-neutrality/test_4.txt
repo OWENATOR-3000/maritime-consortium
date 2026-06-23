@@ -1,0 +1,19 @@
+Test #4: ShippingLineA creates shipment SH001
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/shipments
+Token: shippingA
+Request Body: {"shipmentId":"SH001","routeCode":"RT-EAST-01","cargoDescription":"Container electronics"}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "shipmentId": "SH001",
+  "routeCode": "RT-EAST-01",
+  "cargoDescription": "Container electronics",
+  "createdBy": "ShippingLineAMSP",
+  "status": "CREATED",
+  "clearanceApprovals": [],
+  "documentHashes": [],
+  "createdAt": 1782078451
+}

@@ -173,6 +173,13 @@ Returns system status. No authentication required.
 
 ---
 
+```
+GET  /metrics
+```
+Returns live, in-memory request statistics — count, average latency, and error count per route, plus overall uptime and error rate. No authentication required. Resets when the API gateway restarts. See [Performance Metrics Dashboard](#performance-metrics-dashboard-metrics-dashboardhtml) below for a visual view.
+
+---
+
 #### Shipments
 
 ```
@@ -274,6 +281,132 @@ Verify a document's integrity. Re-reads the stored file, recomputes its SHA-256 
 
 ---
 
+#### Consortium Governance
+
+```
+POST /governance/proposals
+```
+Propose a consortium-level governance change. Caller must be an active member. `changeType` is one of `ADD_MEMBER`, `SUSPEND_MEMBER`, `REVOKE_MEMBER`, `REINSTATE_MEMBER`, `CHANGE_CLEARANCE_THRESHOLD`.
+
+Request body:
+```json
+{
+  "proposalId": "PROP-001",
+  "changeType": "SUSPEND_MEMBER",
+  "payload": { "targetMsp": "ShippingLineBMSP" }
+}
+```
+
+---
+
+```
+POST /governance/proposals/:id/vote
+```
+Cast a `YES`/`NO` vote on an open proposal. One vote per active member per proposal. Once `YES` votes reach a majority of currently active members, the proposal is automatically marked `APPROVED` and the change is applied immediately — membership status changes or the clearance-approver rule updates with no separate "apply" step.
+
+Request body: `{ "choice": "YES" }`
+
+---
+
+```
+GET  /governance/proposals
+GET  /governance/proposals/:id
+```
+List all proposals, or fetch one proposal with its current vote tally.
+
+---
+
+```
+GET  /governance/members
+GET  /governance/members/:mspId
+```
+Full membership roster (status: `ACTIVE`, `PENDING`, `SUSPENDED`, or `REVOKED`), or a single organisation's status.
+
+---
+
+```
+POST /governance/membership/request
+```
+Sponsor a candidate organisation's membership application (caller must already be an active member). Creates a `PENDING` record — does not grant access until an `ADD_MEMBER` proposal reaches quorum.
+
+Request body: `{ "candidateMsp": "ShippingLineCMSP", "organisationName": "Shipping Line C" }`
+
+---
+
+```
+GET  /governance/audit
+```
+The full immutable consortium governance history — every proposal, vote, and outcome, in order.
+
+---
+
+A **suspended or revoked organisation is rejected by the chaincode itself**, not just by the API — every shipment, commercial-data, and document transaction function checks active membership before executing.
+
+---
+
+#### Compliance Enforcement
+
+```
+POST /shipments/:id/compliance/flag
+```
+Regulator-only. Flags a compliance violation against a shipment.
+
+Request body: `{ "violationId": "V001", "violationType": "LATE_FILING", "details": "Filed 3 days late" }`
+
+---
+
+```
+GET  /shipments/:id/compliance
+```
+List all compliance violations recorded against a shipment.
+
+---
+
+```
+POST /shipments/:id/compliance/:violationId/resolve
+```
+Regulator-only. Marks a violation resolved.
+
+Request body: `{ "resolutionNotes": "Penalty waived after review" }`
+
+---
+
+#### Dispute Resolution
+
+```
+POST /shipments/:id/disputes
+```
+Raise a dispute against a shipment. Caller must be an active member. Status flow: `OPEN → RESPONDED → RESOLVED`.
+
+Request body: `{ "disputeId": "D001", "reason": "Cargo weight mismatch" }`
+
+---
+
+```
+GET  /shipments/:id/disputes
+```
+List all disputes for a shipment.
+
+---
+
+```
+POST /shipments/:id/disputes/:disputeId/respond
+```
+Counterparty responds to an open dispute.
+
+Request body: `{ "response": "Weight confirmed correct per manifest" }`
+
+---
+
+```
+POST /shipments/:id/disputes/:disputeId/resolve
+```
+Regulator-only — the neutral arbiter. Resolves a dispute regardless of its current status (except already-`RESOLVED`).
+
+Request body: `{ "resolution": "Manifest takes precedence; no penalty" }`
+
+---
+
 ## Running the Test Suite
 
 With the system running, execute:
@@ -282,7 +415,7 @@ With the system running, execute:
 bash tests/run-tests.sh
 ```
 
-The suite runs 20 automated tests covering all six governance enforcement domains:
+The suite runs 70 automated tests covering seven enforcement domains:
 
 1. **Governed Interoperability** — API authentication and access control
 2. **Governance Neutrality** — role-based transaction restrictions and multi-party endorsement
@@ -290,16 +423,120 @@ The suite runs 20 automated tests covering all six governance enforcement domain
 4. **Bounded Transparency** — regulator audit access and public data visibility
 5. **Distributed Validation Authority** — enforcement of multi-approval requirements before finalisation
 6. **Hybrid Compliance** — off-chain document storage with on-chain hash anchoring and tamper detection
+7. **Advanced Attack Simulation** — cross-org private-data write attempts, full suspend/reinstate/revoke governance round trips with enforcement checks at every step, a non-active member blocked from voting (including voting on its own reinstatement), a forged-approval tamper attempt against `FinalizeClearance`, and a revoked credential rejected identically across repeated "replay" attempts
 
-Each test outputs `PASS` or `FAIL`. Evidence files for all 20 tests are saved to `tests/evidence/` as plain text, capturing the HTTP method, URL, request body, expected status, actual status, and full response body.
+Each test outputs `PASS` or `FAIL`. Evidence files for all 45 tests are saved to `tests/evidence/` as plain text, capturing the HTTP method, URL, request body, expected status, actual status, and full response body. Domain 7 ends by reinstating Shipping Line B, so the suite leaves the ledger in a clean state for a subsequent run.
+
+### Additional Test Scripts
+
+```bash
+bash tests/governance-smoke-test.sh
+```
+Verifies the consortium governance round trip end-to-end: propose suspending an organisation, vote it to quorum, confirm the chaincode itself blocks that organisation's transactions, then reinstate it and confirm access is restored. Uses fixed proposal IDs — run once per fresh `stop.sh`/`start.sh` cycle.
+
+```bash
+bash tests/fault-tolerance-test.sh
+```
+Proves RAFT orderer resilience: stops 1 of 3 orderers (quorum holds, writes still succeed), stops a 2nd (quorum lost, writes correctly fail), then restarts both (writes succeed again). This script actually stops and restarts your running orderer containers — only run it when you don't need the system for anything else for a couple of minutes. Evidence saved to `tests/evidence/fault-tolerance/`.
+
+```bash
+node tests/external-systems-simulation.js
+```
+Simulates three external, non-blockchain systems — an ERP, a Customs declaration system, and a Port Terminal Operating System — integrating through the API gateway exactly as a real deployment would, with no special access path. Evidence saved to `tests/evidence/interoperability/`.
+
+---
+
+## Chapter 6 Demonstration Scenarios
+
+Five standalone scripts demonstrate the five evaluation scenarios from Chapter 6 of the accompanying thesis (Sections 6.3.1–6.3.5). Each script is self-contained: it creates its own shipment and supporting data using a timestamped ID (e.g. `S1-ONBOARD-1750123456`) so it never conflicts with the main test suite or with other scenario scripts running concurrently.
+
+All scripts are in `tests/` and require the system to be running (`bash start.sh`).
+
+### Section 6.3.1 — Stakeholder Onboarding and Consortium Governance
+
+```bash
+bash tests/scenario-1-stakeholder-onboarding.sh
+```
+
+Demonstrates on-chain dynamic membership governance. The script proposes adding a new organisation (`FreightCoMSP`) to the consortium, votes it through quorum (3 of 5 active members cast YES), confirms the membership reaches `ACTIVE` status, verifies the new member appears in the roster, and confirms that a duplicate vote from the same member is correctly rejected with `400`. Key checks:
+
+- Governance proposal created and returned `202`
+- Three YES votes reach quorum and auto-approve the proposal
+- Member status transitions to `ACTIVE` on the ledger
+- Duplicate vote blocked by chaincode at protocol level (`400`)
+- Governance audit trail records every proposal and vote event
+
+### Section 6.3.2 — Cargo Booking and Multi-Party Clearance
+
+```bash
+bash tests/scenario-2-cargo-booking.sh
+```
+
+Demonstrates the end-to-end cargo clearance workflow. A shipping line creates a shipment, a compliance document is uploaded with its SHA-256 hash anchored on-chain, and the three required parties (Customs, Port, Shipping Line A) each record their approval. The script confirms that a premature finalise attempt is rejected before all approvals are collected, and that finalisation succeeds once the quorum is met. Key checks:
+
+- Shipment created by Shipping Line A (`202`)
+- Regulator blocked from creating shipments (`403`)
+- Compliance document uploaded and hash anchored on-chain
+- Customs Authority and Port Authority approvals recorded
+- Early finalise attempt rejected (`400`) with "missing approvals" error
+- Shipping Line A approval added; finalise then succeeds (`200`)
+- Shipment status reads `CLEARED`
+- Audit trail contains all lifecycle events
+
+### Section 6.3.3 — Confidential Commercial Data
+
+```bash
+bash tests/scenario-3-confidentiality.sh
+```
+
+Demonstrates the private data collection enforcing commercial confidentiality. Shipping Line A submits commercially sensitive details (contract value, insurance reference) to the `shippingLineAPrivateDetails` collection. The script then reads that data as every participant: authorised organisations (Shipping Line A, Customs, Port, Regulator) receive `200`; Shipping Line B is blocked at chaincode level with `403` — not by the API layer, but by the endorsement policy embedded in the collection definition. Key checks:
+
+- Shipping Line A submits commercial details (`202`)
+- Shipping Line A reads own data (`200`)
+- Customs Authority reads data (`200`)
+- Port Authority reads data (`200`)
+- Regulator reads data (`200`)
+- Shipping Line B read blocked at chaincode level (`403`)
+- Shipping Line B write blocked at chaincode level (`403`)
+- Unauthenticated request rejected (`401`)
+- Shipping Line B can still read the public shipment record (`200`)
+
+### Section 6.3.4 — Interoperability and Legacy System Integration
+
+```bash
+bash tests/scenario-4-interoperability.sh
+```
+
+Demonstrates that existing non-blockchain systems can integrate through the standard REST API gateway with no special blockchain access path. The script invokes `tests/external-systems-simulation.js`, which simulates three external systems — an ERP (Shipping Line A's booking system), a Customs declaration system, and a Port Terminal Operating System — each using only HTTP/JSON bearer-token requests. Key checks:
+
+- ERP submits cargo booking and ledger accepts (`202`)
+- Customs system submits declaration and approves clearance
+- Port TOS approves berth/terminal scheduling
+- Full shipment lifecycle completed end-to-end across three simulated external systems
+- All systems use the identical API surface — no privileged integration path
+
+### Section 6.3.5 — Auditability and Distributed Verification
+
+```bash
+bash tests/scenario-5-auditability.sh
+```
+
+Demonstrates four auditability properties. First, every shipment lifecycle event (create, approve, finalise) is immutably recorded in a per-shipment audit trail readable only by the Regulator. Second, every governance action (proposals, votes, outcomes) is separately recorded in the governance audit trail. Third, the SHA-256 hash anchored on-chain during document upload detects any subsequent tampering with the off-chain file: the script uses `docker exec` to overwrite the stored file, then verifies again — `matches` changes from `true` to `false`. Fourth, the RAFT ordering service is shown to tolerate a single orderer failure: one orderer container is stopped mid-test, a new transaction is submitted and succeeds (2/3 quorum holds), then the orderer is restarted. Key checks:
+
+- Per-shipment audit trail retrieved and contains `CREATED`, `CLEARANCE_APPROVED`, and `CLEARED` events
+- Governance audit trail retrieved and non-empty
+- Original document verifies correctly (`matches: true`)
+- Tampered off-chain file immediately detected (`matches: false`)
+- Network accepts writes with 1 of 3 orderers down (RAFT 2/3 quorum holds)
+- Full two-orderer failure proof available via `bash tests/fault-tolerance-test.sh`
 
 ---
 
 ## Using the GUI (Browser Interface)
 
-Two browser-based interfaces are included as alternatives to using the terminal or `curl`. Both connect directly to the API gateway running at `http://localhost:8080` — the system must be started with `bash start.sh` before opening either file.
+Three browser-based interfaces are included as alternatives to using the terminal or `curl`. All three connect directly to the API gateway running at `http://localhost:8080` — the system must be started with `bash start.sh` before opening any of them.
 
-Open either file by double-clicking it in your file explorer, or by dragging it into a browser window.
+Open any file by double-clicking it in your file explorer, or by dragging it into a browser window.
 
 ---
 
@@ -321,7 +558,7 @@ You can switch identity at any time by clicking the identity pill in the top bar
 
 **Workflow Tabs**
 
-The portal is organised into six sequential tabs:
+The portal is organised into seven sequential tabs:
 
 | Tab | Function |
 |---|---|
@@ -331,6 +568,7 @@ The portal is organised into six sequential tabs:
 | **4 — Finalise Clearance** | Attempt to finalise the shipment clearance. If all three approvals are present the ledger accepts it. If any approval is missing the ledger rejects it with a descriptive error — try finalising early to see this enforced. |
 | **5 — Documents** | Upload a compliance document (base64 file picker provided) to store it off-chain and anchor its hash on-chain. Then verify it to confirm integrity. The tab also supports simulating a tampered document to observe the hash mismatch response. |
 | **6 — Audit Trail** | Retrieve the full transaction history for a shipment. Only the Regulator identity can access this tab's data. |
+| **7 — Governance** | Propose a consortium-level change (suspend/reinstate/revoke a member, admit a new one, or change the clearance-approval rule), then switch identity and vote as different organisations to watch a proposal reach quorum and apply automatically. Also shows the live membership roster and the full governance audit trail. |
 
 All API responses are displayed inline beneath each form in formatted JSON.
 
@@ -338,7 +576,7 @@ All API responses are displayed inline beneath each form in formatted JSON.
 
 ### Test Console — `test-console.html`
 
-A developer-facing interface that mirrors the full 20-test validation suite with individual Run buttons for each test case.
+A developer-facing interface that mirrors the full validation suite with individual Run buttons for each test case, plus three additional cards beyond the original six domains: consortium governance (propose, vote, list proposals/members, audit trail, suspended-member enforcement check), compliance enforcement (flag/list/resolve violations), and dispute resolution (raise/respond/resolve/list) — all using whichever identity is currently active in the top bar, with Regulator-only actions forced automatically.
 
 **Identity Bar**
 
@@ -368,6 +606,14 @@ A connection status indicator in the top bar shows whether the API gateway at `h
 
 ---
 
+### Performance Metrics Dashboard — `metrics-dashboard.html`
+
+A live view over the `GET /metrics` endpoint. Shows total requests, total errors, error rate, and uptime as summary cards, a per-route table (method, path, request count, average latency, error count), and a bar chart of average latency for the 10 busiest routes. Auto-refreshes every 3 seconds (toggle in the top bar) or refresh manually with the button beside it.
+
+Open it after generating some traffic — through the portal, the test console, or any of the test scripts — since it starts empty on a freshly started API gateway. Metrics are in-memory only and reset on restart; they complement, rather than replace, the Hyperledger Caliper load-test figures in Table 6.1.
+
+---
+
 ## Stopping the System
 
 ```bash
@@ -383,13 +629,27 @@ Removes all Docker containers, volumes, and generated crypto material (`network/
 ```
 ├── api/                        API gateway (Node.js + Hyperledger Fabric Gateway SDK)
 │   └── src/
-│       ├── server.js           Express server — all route handlers
+│       ├── server.js           HTTP server — all route handlers
 │       ├── fabric-client.js    Fabric Gateway connection pool
 │       ├── auth.js             Token-to-identity mapping
-│       └── config.js           Peer endpoints and channel configuration
+│       ├── config.js           Peer endpoints and channel configuration
+│       └── metrics.js          In-memory request metrics (GET /metrics)
 ├── chaincode/
 │   └── maritime-consortium/
-│       └── index.js            Smart contract — all transaction functions
+│       ├── index.js                       Chaincode entry point
+│       └── lib/
+│           ├── maritime-consortium-contract.js   Fabric Contract class — thin entry points only
+│           ├── state-keys.js              Shipment / document / audit key schema
+│           ├── msp-roles.js                Organisation MSP ID constants
+│           ├── governance-keys.js          Proposal / vote / member / rule key schema
+│           ├── governance-rules.js         On-chain rule storage + dynamic quorum calculation
+│           ├── membership-service.js       Membership lifecycle (ACTIVE/SUSPENDED/REVOKED/PENDING)
+│           ├── governance-service.js       Propose → vote → tally → apply orchestration
+│           ├── audit-service.js            Immutable shipment + governance audit logging
+│           ├── compliance-keys.js          Violation key schema
+│           ├── compliance-service.js       Compliance violation flag/resolve
+│           ├── dispute-keys.js             Dispute key schema
+│           └── dispute-service.js          Dispute raise/respond/resolve
 ├── network/
 │   ├── configtx.yaml           Channel and endorsement policy definitions
 │   ├── crypto-config.yaml      Organisation and identity specifications
@@ -400,11 +660,20 @@ Removes all Docker containers, volumes, and generated crypto material (`network/
 │       ├── setup-channel.sh    Channel creation and peer join
 │       ├── deploy-chaincode.sh Chaincode lifecycle (package → install → approve → commit)
 │       └── env.sh              Peer context switching helpers
-├── docs/                       Implementation blueprint and validation matrix
+├── docs/                       Implementation blueprint, validation matrix, framework mapping
 ├── storage/documents/          Off-chain document storage (mounted into API container)
 ├── tests/
-│   ├── run-tests.sh            Automated test suite (20 tests)
-│   └── evidence/               Per-test evidence output (generated on test run)
+│   ├── run-tests.sh                       Core validation suite (70 tests)
+│   ├── scenario-1-stakeholder-onboarding.sh   Chapter 6 — Section 6.3.1 demonstration
+│   ├── scenario-2-cargo-booking.sh            Chapter 6 — Section 6.3.2 demonstration
+│   ├── scenario-3-confidentiality.sh          Chapter 6 — Section 6.3.3 demonstration
+│   ├── scenario-4-interoperability.sh         Chapter 6 — Section 6.3.4 demonstration
+│   ├── scenario-5-auditability.sh             Chapter 6 — Section 6.3.5 demonstration
+│   ├── governance-smoke-test.sh           Consortium governance round-trip test
+│   ├── fault-tolerance-test.sh            RAFT orderer resilience test
+│   ├── external-systems-simulation.js     External-system (ERP/Customs/Port TOS) integration demo
+│   └── evidence/                          Per-test evidence output (generated on test run)
+├── metrics-dashboard.html      Live performance metrics dashboard
 ├── start.sh                    Master startup script
 └── stop.sh                     Teardown script
 ```

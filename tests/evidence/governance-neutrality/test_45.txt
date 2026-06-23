@@ -1,0 +1,26 @@
+Test #45: PortAuthority votes YES (cleanup, 3/3) — ShippingLineB active again
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/governance/proposals/ATTACK-CLEANUP-1/vote
+Token: port
+Request Body: {"choice":"YES"}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "proposalId": "ATTACK-CLEANUP-1",
+  "changeType": "REINSTATE_MEMBER",
+  "payload": {
+    "targetMsp": "ShippingLineBMSP"
+  },
+  "proposedBy": "CustomsAuthorityMSP",
+  "status": "APPROVED",
+  "votes": {
+    "ShippingLineAMSP": "YES",
+    "CustomsAuthorityMSP": "YES",
+    "PortAuthorityMSP": "YES"
+  },
+  "createdAt": 1782078522,
+  "approvedAt": 1782078530,
+  "requiredVotes": 3
+}

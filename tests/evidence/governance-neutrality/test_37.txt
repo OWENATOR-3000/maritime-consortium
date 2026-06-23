@@ -1,0 +1,22 @@
+Test #37: ShippingLineA votes YES to revoke (1/3)
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/governance/proposals/ATTACK-REVOKE-1/vote
+Token: shippingA
+Request Body: {"choice":"YES"}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "proposalId": "ATTACK-REVOKE-1",
+  "changeType": "REVOKE_MEMBER",
+  "payload": {
+    "targetMsp": "ShippingLineBMSP"
+  },
+  "proposedBy": "ShippingLineAMSP",
+  "status": "OPEN",
+  "votes": {
+    "ShippingLineAMSP": "YES"
+  },
+  "createdAt": 1782078510
+}

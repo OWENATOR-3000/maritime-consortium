@@ -1,0 +1,10 @@
+{
+  "persona": "port-tos",
+  "method": "GET",
+  "url": "/health",
+  "status": 200,
+  "response": {
+    "ok": true
+  },
+  "timestamp": "2026-06-23T17:46:00.793Z"
+}

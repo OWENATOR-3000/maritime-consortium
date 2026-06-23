@@ -1,0 +1,12 @@
+Test #60: Finalize with only 3/4 approvals fails under the new rule
+Type: NEGATIVE
+Method: POST
+URL: http://localhost:8080/shipments/SH-ATTACK-4APPROVER/clearance/finalize
+Token: shippingA
+Request Body: none
+Expected Status: 400
+Actual Status: 400
+Response:
+{
+  "error": "chaincode response 500, Shipment clearance cannot be finalized. Missing approvals: RegulatorMSP"
+}

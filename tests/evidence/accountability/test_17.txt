@@ -1,0 +1,25 @@
+Test #17: Regulator reads public shipment data
+Type: POSITIVE
+Method: GET
+URL: http://localhost:8080/shipments/SH001
+Token: regulator
+Request Body: none
+Expected Status: 200
+Actual Status: 200
+Response:
+{
+  "shipmentId": "SH001",
+  "routeCode": "RT-EAST-01",
+  "cargoDescription": "Container electronics",
+  "createdBy": "ShippingLineAMSP",
+  "status": "CLEARED",
+  "clearanceApprovals": [
+    "ShippingLineAMSP",
+    "CustomsAuthorityMSP",
+    "PortAuthorityMSP"
+  ],
+  "documentHashes": [],
+  "createdAt": 1782078451,
+  "clearedAt": 1782078461,
+  "privateDataHash": "d6d873493a375019ac2e31f921f47f6e33eb74555ed71d857744765442d22439"
+}

@@ -1,0 +1,22 @@
+Test #23: ShippingLineA votes YES to suspend (1/3)
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/governance/proposals/ATTACK-SUSPEND-1/vote
+Token: shippingA
+Request Body: {"choice":"YES"}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "proposalId": "ATTACK-SUSPEND-1",
+  "changeType": "SUSPEND_MEMBER",
+  "payload": {
+    "targetMsp": "ShippingLineBMSP"
+  },
+  "proposedBy": "ShippingLineAMSP",
+  "status": "OPEN",
+  "votes": {
+    "ShippingLineAMSP": "YES"
+  },
+  "createdAt": 1782078479
+}

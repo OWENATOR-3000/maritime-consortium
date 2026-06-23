@@ -1,0 +1,16 @@
+Test #50: ShippingLineC membership status is now ACTIVE
+Type: POSITIVE
+Method: GET
+URL: http://localhost:8080/governance/members/ShippingLineCMSP
+Token: regulator
+Request Body: none
+Expected Status: 200
+Actual Status: 200
+Response:
+{
+  "mspId": "ShippingLineCMSP",
+  "organisationName": "Shipping Line C",
+  "founding": false,
+  "status": "ACTIVE",
+  "activatedAt": 1782078540
+}

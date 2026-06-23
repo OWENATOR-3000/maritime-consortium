@@ -1,0 +1,21 @@
+Test #46: ShippingLineA proposes admitting ShippingLineC
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/governance/proposals
+Token: shippingA
+Request Body: {"proposalId":"ATTACK-ADDMEMBER-1","changeType":"ADD_MEMBER","payload":{"targetMsp":"ShippingLineCMSP","organisationName":"Shipping Line C"}}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "proposalId": "ATTACK-ADDMEMBER-1",
+  "changeType": "ADD_MEMBER",
+  "payload": {
+    "targetMsp": "ShippingLineCMSP",
+    "organisationName": "Shipping Line C"
+  },
+  "proposedBy": "ShippingLineAMSP",
+  "status": "OPEN",
+  "votes": {},
+  "createdAt": 1782078533
+}

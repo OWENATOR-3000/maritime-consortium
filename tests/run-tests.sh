@@ -22,6 +22,15 @@ EVIDENCE_DIR="$(cd "$(dirname "$0")" && pwd)/evidence"
 rm -rf "$EVIDENCE_DIR"
 mkdir -p "$EVIDENCE_DIR"
 
+# Evidence is organised by STBF component rather than dumped flat, so the
+# repository directly satisfies "Evidence Collection and Demonstration
+# Repository" from the feedback. CURRENT_DOMAIN is set once per section
+# below and read by run_test() when it writes each test's evidence file.
+for d in governance-neutrality confidentiality interoperability accountability compliance distributed-verification; do
+  mkdir -p "${EVIDENCE_DIR}/${d}"
+done
+CURRENT_DOMAIN="interoperability"
+
 # ── Helpers ─────────────────────────────────────────────────────────────
 
 green()  { printf "\033[32m%s\033[0m" "$1"; }
@@ -64,7 +73,7 @@ run_test() {
     echo "Actual Status: ${HTTP_CODE}"
     echo "Response:"
     echo "${RESPONSE_BODY}" | python3 -m json.tool 2>/dev/null || echo "${RESPONSE_BODY}"
-  } > "${EVIDENCE_DIR}/test_${TEST_NUM}.txt"
+  } > "${EVIDENCE_DIR}/${CURRENT_DOMAIN}/test_${TEST_NUM}.txt"
 
   if [ "$HTTP_CODE" = "$EXPECTED_STATUS" ]; then
     PASS=$((PASS + 1))
@@ -98,6 +107,7 @@ echo ""
 
 # ── 1. Governance Neutrality ────────────────────────────────────────────
 echo "── 1. Governance Neutrality ──────────────────────────────────"
+CURRENT_DOMAIN="governance-neutrality"
 
 # Create shipment as ShippingLineA (positive)
 run_test 4 "ShippingLineA creates shipment SH001" POSITIVE 202 \
@@ -140,6 +150,7 @@ echo ""
 
 # ── 2. Enforceable Confidentiality ──────────────────────────────────────
 echo "── 2. Enforceable Confidentiality ────────────────────────────"
+CURRENT_DOMAIN="confidentiality"
 
 # Submit commercial details as ShippingLineA (positive)
 run_test 13 "ShippingLineA submits commercial details" POSITIVE 202 \
@@ -158,6 +169,7 @@ echo ""
 
 # ── 3. Bounded Transparency ────────────────────────────────────────────
 echo "── 3. Bounded Transparency ───────────────────────────────────"
+CURRENT_DOMAIN="accountability"
 
 # Regulator reconstructs shipment history
 run_test 16 "Regulator retrieves audit trail" POSITIVE 200 \
@@ -171,6 +183,7 @@ echo ""
 
 # ── 5. Hybrid Compliance ───────────────────────────────────────────────
 echo "── 5. Hybrid Compliance ──────────────────────────────────────"
+CURRENT_DOMAIN="compliance"
 
 # Encode a sample document as base64
 SAMPLE_DOC=$(echo -n "This is a regulatory compliance document for shipment SH001." | base64 | tr -d '\n')
@@ -193,11 +206,250 @@ run_test 20 "Tampered document fails verification" POSITIVE 200 \
   POST "${API}/documents/DOC001/verify" "regulator" ""
 
 # Check that the response contains matches: false
-VERIFY_RESULT=$(cat "${EVIDENCE_DIR}/test_20.txt" | grep -o '"matches": *[a-z]*' | head -1)
+VERIFY_RESULT=$(cat "${EVIDENCE_DIR}/${CURRENT_DOMAIN}/test_20.txt" | grep -o '"matches": *[a-z]*' | head -1)
 if echo "$VERIFY_RESULT" | grep -q "false"; then
   printf "  %-3s %-50s [%s]  %s\n" "  " "  → Tampered hash mismatch confirmed" "CHECK" "$(green 'PASS')"
 else
   printf "  %-3s %-50s [%s]  %s\n" "  " "  → Tampered hash mismatch NOT detected" "CHECK" "$(yellow 'REVIEW')"
+fi
+
+echo ""
+
+# ── 7. Advanced Attack Simulation (Phase 3.2) ──────────────────────────
+echo "── 7. Advanced Attack Simulation ─────────────────────────────"
+CURRENT_DOMAIN="confidentiality"
+
+# Cross-shipping-line WRITE attempt (extends test #15's read-only check)
+run_test 21 "ShippingLineB attempts to write competitor's commercial details" NEGATIVE 403 \
+  POST "${API}/shipments/SH001/commercial-details" "shippingB" \
+  '{"commercialDetails":{"contractValue":"$1","insuranceRef":"FAKE","clientName":"Attacker"}}'
+
+CURRENT_DOMAIN="governance-neutrality"
+
+# ── Suspend ShippingLineB via governance, prove enforcement, then reinstate ──
+run_test 22 "ShippingLineA proposes suspending ShippingLineB" POSITIVE 202 \
+  POST "${API}/governance/proposals" "shippingA" \
+  '{"proposalId":"ATTACK-SUSPEND-1","changeType":"SUSPEND_MEMBER","payload":{"targetMsp":"ShippingLineBMSP"}}'
+
+run_test 23 "ShippingLineA votes YES to suspend (1/3)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-SUSPEND-1/vote" "shippingA" '{"choice":"YES"}'
+
+run_test 24 "CustomsAuthority votes YES to suspend (2/3)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-SUSPEND-1/vote" "customs" '{"choice":"YES"}'
+
+run_test 25 "PortAuthority votes YES to suspend — quorum reached (3/3)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-SUSPEND-1/vote" "port" '{"choice":"YES"}'
+sleep 1   # settle delay — see note on test 54 below
+
+run_test 26 "Suspended ShippingLineB blocked from creating a shipment" NEGATIVE 403 \
+  POST "${API}/shipments" "shippingB" \
+  '{"shipmentId":"SH-ATTACK-BLOCKED","routeCode":"RT-X","cargoDescription":"should be rejected"}'
+
+run_test 27 "CustomsAuthority proposes reinstating ShippingLineB" POSITIVE 202 \
+  POST "${API}/governance/proposals" "customs" \
+  '{"proposalId":"ATTACK-REINSTATE-1","changeType":"REINSTATE_MEMBER","payload":{"targetMsp":"ShippingLineBMSP"}}'
+
+# Non-member-vote attack: a suspended org cannot even vote to un-suspend itself
+run_test 28 "Suspended ShippingLineB cannot vote on its own reinstatement" NEGATIVE 403 \
+  POST "${API}/governance/proposals/ATTACK-REINSTATE-1/vote" "shippingB" '{"choice":"YES"}'
+
+run_test 29 "ShippingLineA votes YES to reinstate (1/3)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-REINSTATE-1/vote" "shippingA" '{"choice":"YES"}'
+
+run_test 30 "CustomsAuthority votes YES to reinstate (2/3)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-REINSTATE-1/vote" "customs" '{"choice":"YES"}'
+
+run_test 31 "PortAuthority votes YES to reinstate — quorum reached (3/3)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-REINSTATE-1/vote" "port" '{"choice":"YES"}'
+sleep 1
+
+run_test 32 "Reinstated ShippingLineB can create a shipment again" POSITIVE 202 \
+  POST "${API}/shipments" "shippingB" \
+  '{"shipmentId":"SH-ATTACK-REINSTATED","routeCode":"RT-X","cargoDescription":"should succeed"}'
+
+CURRENT_DOMAIN="distributed-verification"
+
+# ── Forged-approval tamper attempt ──────────────────────────────────────
+# FinalizeClearance takes only a shipmentId — any client-supplied approval
+# data in the request body is structurally impossible for it to consume.
+# The chaincode recomputes the approval count from ledger state only.
+run_test 33 "Create SH-ATTACK-FORGE for tamper test" POSITIVE 202 \
+  POST "${API}/shipments" "shippingA" \
+  '{"shipmentId":"SH-ATTACK-FORGE","routeCode":"RT-X","cargoDescription":"tamper test"}'
+
+run_test 34 "ShippingLineA records 1 of 3 required approvals" POSITIVE 202 \
+  POST "${API}/shipments/SH-ATTACK-FORGE/clearance/approve" "shippingA" ""
+
+run_test 35 "Finalize with forged extra-approvals in body still rejected" NEGATIVE 400 \
+  POST "${API}/shipments/SH-ATTACK-FORGE/clearance/finalize" "shippingA" \
+  '{"clearanceApprovals":["ShippingLineAMSP","CustomsAuthorityMSP","PortAuthorityMSP"],"status":"CLEARED"}'
+
+CURRENT_DOMAIN="governance-neutrality"
+
+# ── Revoked-credential replay attack ────────────────────────────────────
+# Revocation is permanent (unlike suspension). Attempting the same
+# transaction twice with a revoked identity must fail identically both
+# times — proving the rejection is durable, not a one-off flicker.
+run_test 36 "ShippingLineA proposes revoking ShippingLineB" POSITIVE 202 \
+  POST "${API}/governance/proposals" "shippingA" \
+  '{"proposalId":"ATTACK-REVOKE-1","changeType":"REVOKE_MEMBER","payload":{"targetMsp":"ShippingLineBMSP"}}'
+
+run_test 37 "ShippingLineA votes YES to revoke (1/3)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-REVOKE-1/vote" "shippingA" '{"choice":"YES"}'
+
+run_test 38 "CustomsAuthority votes YES to revoke (2/3)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-REVOKE-1/vote" "customs" '{"choice":"YES"}'
+
+run_test 39 "PortAuthority votes YES to revoke — quorum reached (3/3)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-REVOKE-1/vote" "port" '{"choice":"YES"}'
+sleep 1
+
+run_test 40 "Revoked ShippingLineB rejected — replay attempt 1 of 2" NEGATIVE 403 \
+  POST "${API}/shipments" "shippingB" \
+  '{"shipmentId":"SH-ATTACK-REVOKED","routeCode":"RT-X","cargoDescription":"replay 1"}'
+
+run_test 41 "Revoked ShippingLineB rejected — replay attempt 2 of 2 (same result)" NEGATIVE 403 \
+  POST "${API}/shipments" "shippingB" \
+  '{"shipmentId":"SH-ATTACK-REVOKED","routeCode":"RT-X","cargoDescription":"replay 2"}'
+
+# ── Restore clean state for subsequent suite runs ───────────────────────
+run_test 42 "Propose reinstating ShippingLineB (cleanup)" POSITIVE 202 \
+  POST "${API}/governance/proposals" "customs" \
+  '{"proposalId":"ATTACK-CLEANUP-1","changeType":"REINSTATE_MEMBER","payload":{"targetMsp":"ShippingLineBMSP"}}'
+
+run_test 43 "ShippingLineA votes YES (cleanup, 1/3)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-CLEANUP-1/vote" "shippingA" '{"choice":"YES"}'
+
+run_test 44 "CustomsAuthority votes YES (cleanup, 2/3)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-CLEANUP-1/vote" "customs" '{"choice":"YES"}'
+
+run_test 45 "PortAuthority votes YES (cleanup, 3/3) — ShippingLineB active again" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-CLEANUP-1/vote" "port" '{"choice":"YES"}'
+
+echo ""
+
+# ── Participant onboarding: ADD_MEMBER proposal type ────────────────────
+# Distinct from suspend/reinstate/revoke — proves a brand-new candidate
+# organisation can be admitted through the same propose/vote/quorum path.
+echo "── 7b. Participant Onboarding (ADD_MEMBER) ───────────────────"
+
+run_test 46 "ShippingLineA proposes admitting ShippingLineC" POSITIVE 202 \
+  POST "${API}/governance/proposals" "shippingA" \
+  '{"proposalId":"ATTACK-ADDMEMBER-1","changeType":"ADD_MEMBER","payload":{"targetMsp":"ShippingLineCMSP","organisationName":"Shipping Line C"}}'
+
+run_test 47 "ShippingLineA votes YES to admit (1/3)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-ADDMEMBER-1/vote" "shippingA" '{"choice":"YES"}'
+
+run_test 48 "CustomsAuthority votes YES to admit (2/3)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-ADDMEMBER-1/vote" "customs" '{"choice":"YES"}'
+
+run_test 49 "PortAuthority votes YES to admit — quorum reached (3/3)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-ADDMEMBER-1/vote" "port" '{"choice":"YES"}'
+sleep 1
+
+run_test 50 "ShippingLineC membership status is now ACTIVE" POSITIVE 200 \
+  GET "${API}/governance/members/ShippingLineCMSP" "regulator" ""
+
+ADDMEMBER_RESULT=$(grep -o '"status":[[:space:]]*"[A-Z]*"' "${EVIDENCE_DIR}/${CURRENT_DOMAIN}/test_50.txt" | head -1)
+if echo "$ADDMEMBER_RESULT" | grep -q "ACTIVE"; then
+  printf "  %-3s %-50s [%s]  %s\n" "  " "  → New member status confirmed ACTIVE" "CHECK" "$(green 'PASS')"
+else
+  printf "  %-3s %-50s [%s]  %s\n" "  " "  → New member status NOT confirmed ACTIVE" "CHECK" "$(yellow 'REVIEW')"
+fi
+echo ""
+
+# ── Governance change workflow: CHANGE_CLEARANCE_THRESHOLD ──────────────
+# Demonstrates the exact scenario from the feedback: "propose changing the
+# clearance approval rule from three required approvers to four required
+# approvers." ShippingLineC from the previous section is still ACTIVE and
+# permanent for the remainder of this run, which means active membership is
+# now 6 — so majority quorum is 4, not 3. ShippingLineC itself has no real
+# API token and can never vote, so a 4th REAL vote (ShippingLineB) is cast
+# below for both this proposal and its revert. This deliberately avoids
+# trying to shrink membership back down first — doing that would require
+# the same revoke-then-immediately-recompute-quorum sequence whose
+# cross-peer propagation timing caused the earlier failure.
+echo "── 7c. Governance Change Workflow (CHANGE_CLEARANCE_THRESHOLD) ─"
+
+run_test 51 "Propose raising clearance approvers from 3 to 4 (adds Regulator)" POSITIVE 202 \
+  POST "${API}/governance/proposals" "shippingA" \
+  '{"proposalId":"ATTACK-THRESHOLD-1","changeType":"CHANGE_CLEARANCE_THRESHOLD","payload":{"requiredApprovers":["ShippingLineAMSP","CustomsAuthorityMSP","PortAuthorityMSP","RegulatorMSP"]}}'
+
+run_test 52 "ShippingLineA votes YES (1/4 — active membership is 6)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-THRESHOLD-1/vote" "shippingA" '{"choice":"YES"}'
+
+run_test 53 "CustomsAuthority votes YES (2/4)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-THRESHOLD-1/vote" "customs" '{"choice":"YES"}'
+
+run_test 54 "PortAuthority votes YES (3/4)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-THRESHOLD-1/vote" "port" '{"choice":"YES"}'
+
+run_test 55 "ShippingLineB votes YES — quorum reached (4/4), rule now requires 4" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-THRESHOLD-1/vote" "shippingB" '{"choice":"YES"}'
+sleep 1
+
+run_test 56 "Create SH-ATTACK-4APPROVER under the new rule" POSITIVE 202 \
+  POST "${API}/shipments" "shippingA" \
+  '{"shipmentId":"SH-ATTACK-4APPROVER","routeCode":"RT-X","cargoDescription":"4-approver rule test"}'
+
+run_test 57 "ShippingLineA approves (1/4)" POSITIVE 202 \
+  POST "${API}/shipments/SH-ATTACK-4APPROVER/clearance/approve" "shippingA" ""
+
+run_test 58 "CustomsAuthority approves (2/4)" POSITIVE 202 \
+  POST "${API}/shipments/SH-ATTACK-4APPROVER/clearance/approve" "customs" ""
+
+run_test 59 "PortAuthority approves (3/4)" POSITIVE 202 \
+  POST "${API}/shipments/SH-ATTACK-4APPROVER/clearance/approve" "port" ""
+
+run_test 60 "Finalize with only 3/4 approvals fails under the new rule" NEGATIVE 400 \
+  POST "${API}/shipments/SH-ATTACK-4APPROVER/clearance/finalize" "shippingA" ""
+
+run_test 61 "Regulator approves (4/4)" POSITIVE 202 \
+  POST "${API}/shipments/SH-ATTACK-4APPROVER/clearance/approve" "regulator" ""
+
+run_test 62 "Finalize succeeds once all 4 required approvers are in" POSITIVE 202 \
+  POST "${API}/shipments/SH-ATTACK-4APPROVER/clearance/finalize" "shippingA" ""
+
+run_test 63 "Propose reverting clearance rule back to the original 3 approvers" POSITIVE 202 \
+  POST "${API}/governance/proposals" "shippingA" \
+  '{"proposalId":"ATTACK-THRESHOLD-REVERT-1","changeType":"CHANGE_CLEARANCE_THRESHOLD","payload":{"requiredApprovers":["ShippingLineAMSP","CustomsAuthorityMSP","PortAuthorityMSP"]}}'
+
+run_test 64 "ShippingLineA votes YES to revert (1/4)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-THRESHOLD-REVERT-1/vote" "shippingA" '{"choice":"YES"}'
+
+run_test 65 "CustomsAuthority votes YES to revert (2/4)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-THRESHOLD-REVERT-1/vote" "customs" '{"choice":"YES"}'
+
+run_test 66 "PortAuthority votes YES to revert (3/4)" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-THRESHOLD-REVERT-1/vote" "port" '{"choice":"YES"}'
+
+run_test 67 "ShippingLineB votes YES — quorum reached (4/4), rule reverted to 3" POSITIVE 202 \
+  POST "${API}/governance/proposals/ATTACK-THRESHOLD-REVERT-1/vote" "shippingB" '{"choice":"YES"}'
+sleep 1
+
+echo ""
+
+CURRENT_DOMAIN="compliance"
+
+# ── Compliance violation resolution (live) ──────────────────────────────
+echo "── 7d. Compliance Violation Resolution ───────────────────────"
+
+run_test 68 "Regulator flags a fresh violation for live-resolve test" POSITIVE 202 \
+  POST "${API}/shipments/SH001/compliance/flag" "regulator" \
+  '{"violationId":"V-RESOLVE-TEST","violationType":"DOCUMENTATION_MISMATCH","details":"Manifest weight differs from declared weight"}'
+
+run_test 69 "Regulator resolves the violation" POSITIVE 202 \
+  POST "${API}/shipments/SH001/compliance/V-RESOLVE-TEST/resolve" "regulator" \
+  '{"resolutionNotes":"Reviewed and confirmed within tolerance"}'
+
+run_test 70 "Violation list confirms RESOLVED status" POSITIVE 200 \
+  GET "${API}/shipments/SH001/compliance" "regulator" ""
+
+RESOLVE_RESULT=$(grep -A8 '"violationId": "V-RESOLVE-TEST"' "${EVIDENCE_DIR}/${CURRENT_DOMAIN}/test_70.txt" | grep -o '"status":[[:space:]]*"[A-Z]*"' | head -1)
+if echo "$RESOLVE_RESULT" | grep -q "RESOLVED"; then
+  printf "  %-3s %-50s [%s]  %s\n" "  " "  → Violation status confirmed RESOLVED" "CHECK" "$(green 'PASS')"
+else
+  printf "  %-3s %-50s [%s]  %s\n" "  " "  → Violation status NOT confirmed RESOLVED" "CHECK" "$(yellow 'REVIEW')"
 fi
 
 echo ""

@@ -1,0 +1,27 @@
+Test #65: CustomsAuthority votes YES to revert (2/4)
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/governance/proposals/ATTACK-THRESHOLD-REVERT-1/vote
+Token: customs
+Request Body: {"choice":"YES"}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "proposalId": "ATTACK-THRESHOLD-REVERT-1",
+  "changeType": "CHANGE_CLEARANCE_THRESHOLD",
+  "payload": {
+    "requiredApprovers": [
+      "ShippingLineAMSP",
+      "CustomsAuthorityMSP",
+      "PortAuthorityMSP"
+    ]
+  },
+  "proposedBy": "ShippingLineAMSP",
+  "status": "OPEN",
+  "votes": {
+    "ShippingLineAMSP": "YES",
+    "CustomsAuthorityMSP": "YES"
+  },
+  "createdAt": 1782078574
+}

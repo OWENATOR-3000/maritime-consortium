@@ -1,0 +1,17 @@
+name: customs-authority
+version: 1.0.0
+client:
+  organization: CustomsAuthority
+organizations:
+  CustomsAuthority:
+    mspid: CustomsAuthorityMSP
+    peers:
+      - peer0.customs-authority.example.com
+peers:
+  peer0.customs-authority.example.com:
+    url: grpcs://localhost:10051
+    tlsCACerts:
+      path: ../network/organizations/peerOrganizations/customs-authority.example.com/tlsca/tlsca.customs-authority.example.com-cert.pem
+    grpcOptions:
+      ssl-target-name-override: peer0.customs-authority.example.com
+      grpc.ssl_target_name_override: peer0.customs-authority.example.com

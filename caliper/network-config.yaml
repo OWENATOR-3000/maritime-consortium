@@ -1,0 +1,49 @@
+name: maritime-consortium-network
+version: '2.0.0'
+
+caliper:
+  blockchain: fabric
+  sutOptions:
+    mutualTls: false
+
+channels:
+  - channelName: operations
+    contracts:
+      - id: maritime-consortium
+
+organizations:
+  - mspid: ShippingLineAMSP
+    identities:
+      certificates:
+        - name: 'UserA'
+          clientPrivateKey:
+            path: '../network/organizations/peerOrganizations/shipping-line-a.example.com/users/User1@shipping-line-a.example.com/msp/keystore/priv_sk'
+          clientSignedCert:
+            path: '../network/organizations/peerOrganizations/shipping-line-a.example.com/users/User1@shipping-line-a.example.com/msp/signcerts/User1@shipping-line-a.example.com-cert.pem'
+    connectionProfile:
+      path: 'connection-profiles/shipping-line-a.yaml'
+      discover: false
+
+  - mspid: CustomsAuthorityMSP
+    identities:
+      certificates:
+        - name: 'UserCustoms'
+          clientPrivateKey:
+            path: '../network/organizations/peerOrganizations/customs-authority.example.com/users/User1@customs-authority.example.com/msp/keystore/priv_sk'
+          clientSignedCert:
+            path: '../network/organizations/peerOrganizations/customs-authority.example.com/users/User1@customs-authority.example.com/msp/signcerts/User1@customs-authority.example.com-cert.pem'
+    connectionProfile:
+      path: 'connection-profiles/customs-authority.yaml'
+      discover: false
+
+  - mspid: PortAuthorityMSP
+    identities:
+      certificates:
+        - name: 'UserPort'
+          clientPrivateKey:
+            path: '../network/organizations/peerOrganizations/port-authority.example.com/users/User1@port-authority.example.com/msp/keystore/priv_sk'
+          clientSignedCert:
+            path: '../network/organizations/peerOrganizations/port-authority.example.com/users/User1@port-authority.example.com/msp/signcerts/User1@port-authority.example.com-cert.pem'
+    connectionProfile:
+      path: 'connection-profiles/port-authority.yaml'
+      discover: false

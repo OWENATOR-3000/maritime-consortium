@@ -1,0 +1,21 @@
+Test #34: ShippingLineA records 1 of 3 required approvals
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/shipments/SH-ATTACK-FORGE/clearance/approve
+Token: shippingA
+Request Body: none
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "shipmentId": "SH-ATTACK-FORGE",
+  "routeCode": "RT-X",
+  "cargoDescription": "tamper test",
+  "createdBy": "ShippingLineAMSP",
+  "status": "PENDING_CLEARANCE_APPROVALS",
+  "clearanceApprovals": [
+    "ShippingLineAMSP"
+  ],
+  "documentHashes": [],
+  "createdAt": 1782078504
+}

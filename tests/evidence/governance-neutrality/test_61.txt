@@ -1,0 +1,24 @@
+Test #61: Regulator approves (4/4)
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/shipments/SH-ATTACK-4APPROVER/clearance/approve
+Token: regulator
+Request Body: none
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "shipmentId": "SH-ATTACK-4APPROVER",
+  "routeCode": "RT-X",
+  "cargoDescription": "4-approver rule test",
+  "createdBy": "ShippingLineAMSP",
+  "status": "READY_FOR_CLEARANCE",
+  "clearanceApprovals": [
+    "ShippingLineAMSP",
+    "CustomsAuthorityMSP",
+    "PortAuthorityMSP",
+    "RegulatorMSP"
+  ],
+  "documentHashes": [],
+  "createdAt": 1782078559
+}

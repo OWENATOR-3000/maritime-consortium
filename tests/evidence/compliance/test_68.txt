@@ -1,0 +1,18 @@
+Test #68: Regulator flags a fresh violation for live-resolve test
+Type: POSITIVE
+Method: POST
+URL: http://localhost:8080/shipments/SH001/compliance/flag
+Token: regulator
+Request Body: {"violationId":"V-RESOLVE-TEST","violationType":"DOCUMENTATION_MISMATCH","details":"Manifest weight differs from declared weight"}
+Expected Status: 202
+Actual Status: 202
+Response:
+{
+  "violationId": "V-RESOLVE-TEST",
+  "shipmentId": "SH001",
+  "violationType": "DOCUMENTATION_MISMATCH",
+  "details": "Manifest weight differs from declared weight",
+  "flaggedBy": "RegulatorMSP",
+  "status": "OPEN",
+  "flaggedAt": 1782078587
+}
